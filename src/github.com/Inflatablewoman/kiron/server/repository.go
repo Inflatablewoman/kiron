@@ -7,9 +7,9 @@ import (
 var repository DataRepository
 
 // InitDatabase will create a connection to a postgres server
-func InitDatabase(connectionString string) error {
+func InitDatabase() error {
 	var err error
-	repository, err = getPostgresDB(connectionString)
+	repository, err = getPostgresDB()
 	return err
 }
 
@@ -26,7 +26,7 @@ type DataRepository interface {
 
 	GetUser(userID string) (*User, error)
 	GetUserByEmail(emailAddress string) (*User, error)
-	DeleteUser(userID string) error
+	DeleteUser(userID int) error
 	SetUser(*User) error
 
 	StoreDocument(documentID string, data []byte) error
