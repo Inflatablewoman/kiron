@@ -33,11 +33,11 @@ func getContext(r *http.Request) (http.Header, error) {
 // RegisterHTTPHandlers registers the http handlers
 func RegisterHTTPHandlers(mux *tigertonic.TrieServeMux) {
 
-	// Get users
-	mux.Handle("GET", "/api/v1/users", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(getUsers)), AuthContext{}))
-
 	// Create user
 	mux.Handle("POST", "/api/v1/users", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(createUser)), AuthContext{}))
+
+	// Get users
+	mux.Handle("GET", "/api/v1/users", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(getUsers)), AuthContext{}))
 
 	// Get single user
 	mux.Handle("GET", "/api/v1/users/{userID}", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(getUser)), AuthContext{}))
@@ -66,8 +66,10 @@ func RegisterHTTPHandlers(mux *tigertonic.TrieServeMux) {
 }
 
 type createUserRequest struct {
-	EmailAddress string `json:"emailAddress"`
+	EmailAddress string `json:"email"`
+	Password     string `json:"password"`
 	Name         string `json:"name"`
+	LastName     string `json:"lastname"`
 }
 
 // createUser will create a user
@@ -77,7 +79,13 @@ func createUser(u *url.URL, h http.Header, request createUserRequest) (int, http
 
 	log.Println("createUser Started")
 
-	user := User{EmailAddress: "example@brainloop.com", FirstName: request.Name}
+	user := User{EmailAddress: request.EmailAddress, Password: request.Password, FirstName: request.Name, LastName: request.LastName}
+
+	err = repository.SetUser(&user)
+
+	if err != nil {
+		return http.StatusInternalServerError, nil, nil, nil
+	}
 
 	// All good!
 	return http.StatusOK, nil, &user, nil
@@ -90,21 +98,30 @@ func getUser(u *url.URL, h http.Header, _ interface{}) (int, http.Header, *User,
 
 	log.Println("getUser Started")
 
-	user := User{EmailAddress: "example@brainloop.com"}
+	userID := u.Query().Get("userID")
+
+	user, err := repository.GetUser(userID)
+
+	if err != nil {
+		return http.StatusInternalServerError, nil, nil, nil
+	}
 
 	// All good!
-	return http.StatusOK, nil, &user, nil
+	return http.StatusOK, nil, user, nil
 }
 
 // getUsers will get a user
-func getUsers(u *url.URL, h http.Header, _ interface{}) (int, http.Header, []*User, error) {
+func getUsers(u *url.URL, h http.Header, _ interface{}) (int, http.Header, []User, error) {
 	var err error
 	defer CatchPanic(&err, "getUsers")
 
 	log.Println("getUsers Started")
-	//
-	user := User{EmailAddress: "example@brainloop.com"}
-	users := []*User{&user}
+
+	users, err := repository.GetUsers()
+
+	if err != nil {
+		return http.StatusInternalServerError, nil, nil, nil
+	}
 
 	// All good!
 	return http.StatusOK, nil, users, nil

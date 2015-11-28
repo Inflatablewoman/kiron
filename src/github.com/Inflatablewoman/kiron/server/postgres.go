@@ -5,8 +5,9 @@ import (
 	"os"
 	"time"
 	// Required
-	_ "github.com/lib/pq"
 	"log"
+
+	_ "github.com/lib/pq"
 )
 
 type postgresRepository struct {
@@ -58,7 +59,7 @@ func (r postgresRepository) DeleteComment(commentID int) error {
 	return nil
 }
 
-func (r postgresRepository) GetUses() ([]*User, error) {
+func (r postgresRepository) GetUsers() ([]User, error) {
 	return nil, nil
 }
 
