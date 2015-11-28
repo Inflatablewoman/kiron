@@ -20,8 +20,8 @@ type DataRepository interface {
 	SetApplication(application *Application) error
 	DeleteApplication(applicationID int) error
 
-	GetComments() ([]Comment, error)
-	GetComment(commentID int) *Comment
+	GetComments(applicationID) ([]Comment, error)
+	GetComment(commendID int) *Comment
 	DeleteComment(commentID int) error
 
 	GetUser(userID string) (*User, error)

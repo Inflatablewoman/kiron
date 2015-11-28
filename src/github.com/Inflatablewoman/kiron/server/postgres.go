@@ -34,7 +34,6 @@ func getPostgresDB() (DataRepository, error) {
 func (r postgresRepository) GetApplications() ([]Application, error) {
 	return nil, nil
 }
-
 func (r postgresRepository) GetApplication(applicationID int) (*Application, error) {
 	return nil, nil
 }
@@ -45,11 +44,29 @@ func (r postgresRepository) DeleteApplication(applicationID int) error {
 	return nil
 }
 
-func (r postgresRepository) GetComments() ([]Comment, error) {
+func (r postgresRepository) GetComments(applicationIDs) ([]Comment, error) {
+	stmt, err := r.db.Prepare("SELECT id, name FROM comments WHERE commentId"
+
 	return nil, nil
 }
 
 func (r postgresRepository) GetComment(commentID int) *Comment {
+	log.Printf("Going to get comment with id %d", commentID)
+	stmt, err := r.db.Prepare("SELECT application_id, created_at, application_id, user_id, contents FROM comments WHERE commentId=$1")
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := stmt.Query(commentID)
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		applicationID int,
+		createdAt time.time,
+	)
+
 	return nil
 }
 
