@@ -44,15 +44,9 @@ func (r postgresRepository) DeleteApplication(applicationID int) error {
 	return nil
 }
 
-func (r postgresRepository) GetComments(applicationIDs) ([]Comment, error) {
-	stmt, err := r.db.Prepare("SELECT id, name FROM comments WHERE commentId"
-
-	return nil, nil
-}
-
-func (r postgresRepository) GetComment(commentID int) *Comment {
-	log.Printf("Going to get comment with id %d", commentID)
-	stmt, err := r.db.Prepare("SELECT application_id, created_at, application_id, user_id, contents FROM comments WHERE commentId=$1")
+func (r postgresRepository) GetComments(applicationID int) ([]*Comment error) {
+	log.Printf("Going to get all comments for application id %d", applicationID)
+	stmt, err := r.db.Prepare("SELECT id, created_at, user_id, contents FROM comments WHERE application_id=$1")
 	if err != nil {
 		return nil, err
 	}
@@ -63,14 +57,84 @@ func (r postgresRepository) GetComment(commentID int) *Comment {
 	}
 
 	var (
-		applicationID int,
-		createdAt time.time,
+		commentID int
+		createdAt time.Time
+		userID int
+		contents string
+		comments []*Comment
 	)
 
-	return nil
+	defer rows.Close()
+	for rows.Next() {
+		err := rows.Scan(&commentID, &createdAt, &userID, &contents)
+		if err != nil {
+			return nil, err
+		}
+		log.Println(commentID, createdAt, userID, contents)
+		comment = Comment{ID: commentID, Created: createdAt, ApplicationID: applicationID, UserID: userID, Contents: contents}
+	
+		comments = append(comments, &comment)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	
+	return &comments, nil
+}
+
+func (r postgresRepository) GetComment(commentID int) *Comment {
+	log.Printf("Going to get single comment with id %d", commentID)
+	stmt, err := r.db.Prepare("SELECT created_at, application_id, user_id, contents FROM comments WHERE id=$1")
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := stmt.Query(commentID)
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		createdAt time.Time
+		applicationID int
+		userID int
+		contents string
+	)
+
+	defer rows.Close()
+	for rows.Next() {
+		err := rows.Scan(&createdAt, &applicationID, &userID, &contents)
+		if err != nil {
+			return nil, err
+		}
+		log.Println(createdAt, applicationID, userID, contents)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	comment = Comment{ID: commentID, Created: createdAt, ApplicationID: applicationID, UserID: userID, Contents: contents}
+	
+	return &comment, nil
 }
 
 func (r postgresRepository) DeleteComment(commentID int) error {
+	stmt, err := r.db.Prepare("DELETE FROM comments WHERE id=$1")
+	if err != nil {
+		return nil, err
+	}
+	res, err := stmt.Exec(commentID)
+	if err != nil {
+		return err
+	}
+	rowCnt, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	log.Printf("Rows affected = %d\n", rowCnt)
+	
 	return nil
 }
 
@@ -126,15 +190,11 @@ func (r postgresRepository) DeleteUser(userID int) error {
 	if err != nil {
 		return err
 	}
-	lastID, err := res.LastInsertId()
-	if err != nil {
-		return err
-	}
 	rowCnt, err := res.RowsAffected()
 	if err != nil {
 		return err
 	}
-	log.Printf("ID = %d, affected = %d\n", lastID, rowCnt)
+	log.Printf("Rows affected = %d\n", rowCnt)
 
 	return nil
 }
