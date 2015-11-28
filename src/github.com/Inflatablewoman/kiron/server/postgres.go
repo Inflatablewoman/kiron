@@ -3,6 +3,7 @@ package server
 import (
 	"database/sql"
 	"os"
+	"time"
 	// Required
 	_ "github.com/lib/pq"
 	"log"
@@ -62,15 +63,13 @@ func (r postgresRepository) GetUses() ([]*User, error) {
 }
 
 func (r postgresRepository) GetUser(userID string) (*User, error) {
-	
-	
-	
+
 	return nil, nil
 }
 
 func (r postgresRepository) GetUserByEmail(emailAddress string) (*User, error) {
 	log.Printf("Going to get user by email address %v", emailAddress)
-	stmt, err := r.db.Prepare("SELECT id, name FROM users WHERE email=$1")
+	stmt, err := r.db.Prepare("SELECT id, name, lastname, password, created_at, role_id FROM users WHERE email=$1")
 	if err != nil {
 		return nil, err
 	}
@@ -81,14 +80,17 @@ func (r postgresRepository) GetUserByEmail(emailAddress string) (*User, error) {
 	}
 
 	var (
-		id   int
-		name string
-		
+		id        int
+		name      string
+		lastName  string
+		password  string
+		created   time.Time
+		roleValue int
 	)
 
 	defer rows.Close()
 	for rows.Next() {
-		err := rows.Scan(&id, &name)
+		err := rows.Scan(&id, &name, &lastName, &password, &created, &roleValue)
 		if err != nil {
 			return nil, err
 		}
@@ -99,7 +101,7 @@ func (r postgresRepository) GetUserByEmail(emailAddress string) (*User, error) {
 		return nil, err
 	}
 
-	user := User{ID: id, EmailAddress: emailAddress, FirstName: name, LastName: }
+	user := User{ID: id, EmailAddress: emailAddress, FirstName: name, LastName: lastName, Password: password, Created: created, Role: role(roleValue)}
 
 	return &user, nil
 }
@@ -117,7 +119,7 @@ func (r postgresRepository) DeleteUser(userID int) error {
 	if err != nil {
 		log.Printf("Got error - LastInsertId: %v", err)
 	}
-	log.Printf("ID = %d, affected = %d\n", lastID, rowCnt)
+	log.Printf("affected = %d\n", rowCnt)
 
 	return nil
 }
@@ -136,7 +138,7 @@ func (r postgresRepository) SetUser(user *User) error {
 	if err != nil {
 		log.Printf("Got error - RowsAffected: %v", err)
 	}
-	log.Printf("ID = %d, affected = %d\n", lastID, rowCnt)
+	log.Printf("affected = %d\n", rowCnt)
 
 	return nil
 }
