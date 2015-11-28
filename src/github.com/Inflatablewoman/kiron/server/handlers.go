@@ -42,6 +42,12 @@ func RegisterHTTPHandlers(mux *tigertonic.TrieServeMux) {
 	// Get single user
 	mux.Handle("GET", "/api/v1/users/{userID}", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(getUser)), AuthContext{}))
 
+	// Get applications
+	mux.Handle("GET", "/api/v1/applications", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(getApplications)), AuthContext{}))
+
+	// Get application
+	mux.Handle("GET", "/api/v1/users/{userID}/application", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(getApplication)), AuthContext{}))
+
 }
 
 // createUser will create a user
@@ -83,6 +89,35 @@ func getUsers(u *url.URL, h http.Header, _ interface{}) (int, http.Header, []*Us
 	// All good!
 	return http.StatusOK, nil, users, nil
 }
+
+// getApplications will get a list of applications
+func getApplications(u *url.URL, h http.Header, _ interface{}) (int, http.Header, []*Application, error) {
+	var err error
+	defer CatchPanic(&err, "getApplications")
+
+	log.Println("getApplications Started")
+
+	// TODO Implement functionality
+	applications := []*Application{}
+
+	// All good!
+	return http.StatusOK, nil, applications, nil
+}
+
+// getApplication will get a list of applications
+func getApplication(u *url.URL, h http.Header, _ interface{}) (int, http.Header, *Application, error) {
+	var err error
+	defer CatchPanic(&err, "getApplications")
+
+	log.Println("getApplications Started")
+
+	// TODO Implement functionality
+	//application := nil
+
+	// All good!
+	return http.StatusOK, nil, nil, nil
+}
+
 
 // RawUploadHandler handles PUT operations
 type RawUploadHandler struct {
