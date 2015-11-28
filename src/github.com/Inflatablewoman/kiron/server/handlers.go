@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"net/url"
 	"runtime"
+	"strconv"
+	"time"
 
 	"github.com/rcrowley/go-tigertonic"
 )
@@ -128,14 +130,17 @@ func getUsers(u *url.URL, h http.Header, _ interface{}) (int, http.Header, []Use
 }
 
 // getApplications will get a list of applications
-func getApplications(u *url.URL, h http.Header, _ interface{}) (int, http.Header, []*Application, error) {
+func getApplications(u *url.URL, h http.Header, _ interface{}) (int, http.Header, []Application, error) {
 	var err error
 	defer CatchPanic(&err, "getApplications")
 
 	log.Println("getApplications Started")
 
-	// TODO Implement functionality
-	applications := []*Application{}
+	applications, err := repository.GetApplications()
+
+	if err != nil {
+		return http.StatusInternalServerError, nil, nil, nil
+	}
 
 	// All good!
 	return http.StatusOK, nil, applications, nil
@@ -148,24 +153,51 @@ func getApplication(u *url.URL, h http.Header, _ interface{}) (int, http.Header,
 
 	log.Println("getApplication Started")
 
-	// TODO Implement functionality
-	//application := nil
+	userID, err := strconv.Atoi(u.Query().Get("userID"))
+
+	application, err := repository.GetApplicationOf(userID)
+
+	if err != nil {
+		return http.StatusInternalServerError, nil, nil, nil
+	}
 
 	// All good!
-	return http.StatusOK, nil, nil, nil
+	return http.StatusOK, nil, application, nil
 }
 
-func createApplication(u *url.URL, h http.Header, _ interface{}) (int, http.Header, *Application, error) {
+type createApplicationRequest struct {
+	Birthday              time.Time `json:"birthday"`
+	PhoneNumber           string    `json:"phone"`
+	Nationality           string    `json:"nationality"`
+	Address               string    `json:"address"`
+	AddressExtra          string    `json:"address_extra"`
+	Zip                   string    `json:"zip"`
+	City                  string    `json:"city"`
+	Country               string    `json:"country"`
+	FirstPageOfSurveyData string    `json:"first_page_of_survey_data"`
+	Gender                string    `json:"gender"`
+	StudyProgram          string    `json:"study_program"`
+	EducationLevel        int       `json:"education_level_id"`
+}
+
+func createApplication(u *url.URL, h http.Header, request createApplicationRequest) (int, http.Header, *Application, error) {
 	var err error
 	defer CatchPanic(&err, "createApplications")
 
 	log.Println("createApplications Started")
 
-	// TODO Implement functionality
-	//application := nil
+	userID, err := strconv.Atoi(u.Query().Get("userID"))
+
+	application := Application{Birthday: request.Birthday, PhoneNumber: request.PhoneNumber, Nationality: request.Nationality, Country: request.Country, City: request.City, Zip: request.Zip, AddressExtra: request.AddressExtra, FirstPageOfSurveyData: request.FirstPageOfSurveyData, Gender: request.Gender, UserID: userID, EducationLevel: request.EducationLevel}
+
+	err = repository.SetApplication(&application)
+
+	if err != nil {
+		return http.StatusInternalServerError, nil, nil, nil
+	}
 
 	// All good!
-	return http.StatusOK, nil, nil, nil
+	return http.StatusCreated, nil, &application, nil
 }
 
 func getDocuments(u *url.URL, h http.Header, _ interface{}) (int, http.Header, []*Document, error) {

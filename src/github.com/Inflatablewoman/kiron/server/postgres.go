@@ -40,6 +40,9 @@ func (r postgresRepository) GetApplications() ([]Application, error) {
 func (r postgresRepository) GetApplication(applicationID int) (*Application, error) {
 	return nil, nil
 }
+func (r postgresRepository) GetApplicationOf(userID int) (*Application, error) {
+	return nil, nil
+}
 func (r postgresRepository) SetApplication(application *Application) error {
 	return nil
 }

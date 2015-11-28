@@ -17,6 +17,7 @@ func InitDatabase() error {
 type DataRepository interface {
 	GetApplications() ([]Application, error)
 	GetApplication(applicationID int) (*Application, error)
+	GetApplicationOf(userID int) (*Application, error)
 	SetApplication(application *Application) error
 	DeleteApplication(applicationID int) error
 
@@ -96,6 +97,7 @@ type Application struct {
 	AddressExtra          string
 	FirstPageOfSurveyData string
 	Gender                string
+	StudyProgram          string
 	UserID                int
 	EducationLevel        int
 	Status                status
