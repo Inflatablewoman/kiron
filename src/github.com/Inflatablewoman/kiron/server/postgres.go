@@ -111,11 +111,11 @@ func (r postgresRepository) DeleteUser(userID int) error {
 	}
 	lastID, err := res.LastInsertId()
 	if err != nil {
-		return err
+		log.Printf("Got error - LastInsertId: %v", err)
 	}
 	rowCnt, err := res.RowsAffected()
 	if err != nil {
-		return err
+		log.Printf("Got error - LastInsertId: %v", err)
 	}
 	log.Printf("ID = %d, affected = %d\n", lastID, rowCnt)
 
@@ -134,11 +134,11 @@ func (r postgresRepository) SetUser(user *User) error {
 	}
 	lastID, err := res.LastInsertId()
 	if err != nil {
-		return err
+		log.Printf("Got error - LastInsertId: %v", err)
 	}
 	rowCnt, err := res.RowsAffected()
 	if err != nil {
-		return err
+		log.Printf("Got error - RowsAffected: %v", err)
 	}
 	log.Printf("ID = %d, affected = %d\n", lastID, rowCnt)
 

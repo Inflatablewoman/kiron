@@ -23,7 +23,7 @@ func TestPostgres(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test create user
-	user := User{EmailAddress: emailAddress, FirstName: firstName, LastName: lastName, Password: bcryptPassword, Created: time.Now().UTC(), Role: RoleApplication}
+	user := User{EmailAddress: emailAddress, FirstName: firstName, LastName: lastName, Password: bcryptPassword, Created: time.Now().UTC(), Role: RoleAdmin}
 
 	t.Logf("Adding user: %v", user)
 
