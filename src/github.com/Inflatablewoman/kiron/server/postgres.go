@@ -2,6 +2,7 @@ package server
 
 import (
 	"database/sql"
+	"os"
 	// Required
 	_ "github.com/lib/pq"
 	"log"
@@ -11,7 +12,9 @@ type postgresRepository struct {
 	db *sql.DB
 }
 
-func getPostgresDB(connectionString string) (DataRepository, error) {
+func getPostgresDB() (DataRepository, error) {
+
+	connectionString := os.Getenv("DBCONN")
 
 	db, err := sql.Open("postgres", connectionString)
 	if err != nil {
@@ -97,11 +100,46 @@ func (r postgresRepository) GetUserByEmail(emailAddress string) (*User, error) {
 	return &user, nil
 }
 
-func (r postgresRepository) DeleteUser(userID string) error {
+func (r postgresRepository) DeleteUser(userID int) error {
+	stmt, err := r.db.Prepare("DELETE FROM users WHERE id = $N")
+	if err != nil {
+		log.Fatal(err)
+	}
+	res, err := stmt.Exec(userID)
+	if err != nil {
+		log.Fatal(err)
+	}
+	lastID, err := res.LastInsertId()
+	if err != nil {
+		log.Fatal(err)
+	}
+	rowCnt, err := res.RowsAffected()
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("ID = %d, affected = %d\n", lastID, rowCnt)
 
 	return nil
 }
-func (r postgresRepository) SetUser(*User) error {
+func (r postgresRepository) SetUser(user *User) error {
+
+	stmt, err := r.db.Prepare("INSERT INTO users(emailAddress, name) VALUES($N,$N)")
+	if err != nil {
+		log.Fatal(err)
+	}
+	res, err := stmt.Exec(user.EmailAddress, user.FirstName)
+	if err != nil {
+		log.Fatal(err)
+	}
+	lastID, err := res.LastInsertId()
+	if err != nil {
+		log.Fatal(err)
+	}
+	rowCnt, err := res.RowsAffected()
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("ID = %d, affected = %d\n", lastID, rowCnt)
 
 	return nil
 }

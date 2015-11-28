@@ -14,9 +14,8 @@ import (
 )
 
 var (
-	host             = flag.String("host", "localhost", "Host Address")
-	port             = flag.Int("port", 1979, "The Post")
-	connectionString = flag.String("dbconn", "", "Database connection string")
+	host = flag.String("host", "localhost", "Host Address")
+	port = flag.Int("port", 1979, "The Post")
 )
 
 func main() {
@@ -27,9 +26,9 @@ func main() {
 	log.SetFlags(log.Ldate | log.Ltime)
 	log.Printf("Starting Kiron Service - Port: %s", fmt.Sprintf(":%d", *port))
 
-	err := server.InitDatabase(*connectionString)
+	err := server.InitDatabase()
 	if err != nil {
-		log.Fatal("Unable to connect to database %v")
+		log.Fatalf("Unable to connect to database %v", err)
 	}
 
 	// Create handlers
@@ -44,7 +43,7 @@ func main() {
 	// server.Close to stop gracefully.
 	go func() {
 		if err := server.ListenAndServe(); err != nil {
-			log.Println("Kiron Service Fatal: %v", err)
+			log.Fatalf("Kiron Service Fatal: %v", err)
 		}
 	}()
 	ch := make(chan os.Signal)
