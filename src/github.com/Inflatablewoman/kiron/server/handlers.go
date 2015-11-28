@@ -45,8 +45,23 @@ func RegisterHTTPHandlers(mux *tigertonic.TrieServeMux) {
 	// Get applications
 	mux.Handle("GET", "/api/v1/applications", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(getApplications)), AuthContext{}))
 
-	// Get application
+	// Get single application
 	mux.Handle("GET", "/api/v1/users/{userID}/application", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(getApplication)), AuthContext{}))
+
+	// Create application
+	mux.Handle("POST", "/api/v1/users/{userID}/application", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(createApplication)), AuthContext{}))
+
+	// Get documents
+	mux.Handle("GET", "/api/v1/users/{userID}/application/{applicationID}/documents", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(getDocuments)), AuthContext{}))
+
+	// Create documents
+	mux.Handle("POST", "/api/v1/users/{userID}/application/{applicationID}/documents", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(createDocuments)), AuthContext{}))
+
+	// Get comments
+	mux.Handle("GET", "/api/v1/users/{userID}/application/{applicationID}/comments", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(getComments)), AuthContext{}))
+
+	// Create comment
+	mux.Handle("POST", "/api/v1/users/{userID}/application/{applicationID}/comments", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(createComment)), AuthContext{}))
 
 }
 
@@ -82,7 +97,7 @@ func getUsers(u *url.URL, h http.Header, _ interface{}) (int, http.Header, []*Us
 	defer CatchPanic(&err, "getUsers")
 
 	log.Println("getUsers Started")
-
+	//
 	user := User{EmailAddress: "example@brainloop.com"}
 	users := []*User{&user}
 
@@ -107,9 +122,9 @@ func getApplications(u *url.URL, h http.Header, _ interface{}) (int, http.Header
 // getApplication will get a list of applications
 func getApplication(u *url.URL, h http.Header, _ interface{}) (int, http.Header, *Application, error) {
 	var err error
-	defer CatchPanic(&err, "getApplications")
+	defer CatchPanic(&err, "getApplication")
 
-	log.Println("getApplications Started")
+	log.Println("getApplication Started")
 
 	// TODO Implement functionality
 	//application := nil
@@ -118,6 +133,70 @@ func getApplication(u *url.URL, h http.Header, _ interface{}) (int, http.Header,
 	return http.StatusOK, nil, nil, nil
 }
 
+func createApplication(u *url.URL, h http.Header, _ interface{}) (int, http.Header, *Application, error) {
+	var err error
+	defer CatchPanic(&err, "createApplications")
+
+	log.Println("createApplications Started")
+
+	// TODO Implement functionality
+	//application := nil
+
+	// All good!
+	return http.StatusOK, nil, nil, nil
+}
+
+func getDocuments(u *url.URL, h http.Header, _ interface{}) (int, http.Header, []*Document, error) {
+	var err error
+	defer CatchPanic(&err, "getDocuments")
+
+	log.Println("getDocuments Started")
+
+	// TODO Implement functionality
+	//documents := nil
+
+	// All good!
+	return http.StatusOK, nil, nil, nil
+}
+
+func createDocuments(u *url.URL, h http.Header, _ interface{}) (int, http.Header, []*Document, error) {
+	var err error
+	defer CatchPanic(&err, "createDocuments")
+
+	log.Println("createDocuments Started")
+
+	// TODO Implement functionality
+	//documents := nil
+
+	// All good!
+	return http.StatusOK, nil, nil, nil
+}
+
+func getComments(u *url.URL, h http.Header, _ interface{}) (int, http.Header, []*Comment, error) {
+	var err error
+	defer CatchPanic(&err, "getComments")
+
+	log.Println("getComments Started")
+
+	// TODO Implement functionality
+	//comments := nil
+
+	// All good!
+	return http.StatusOK, nil, nil, nil
+}
+
+func createComment(u *url.URL, h http.Header, _ interface{}) (int, http.Header, *Comment, error) {
+	var err error
+	defer CatchPanic(&err, "createComment")
+
+	log.Println("createComment Started")
+
+	// TODO Implement functionality
+	//comment := nil
+
+	// All good!
+	return http.StatusOK, nil, nil, nil
+}
 
 // RawUploadHandler handles PUT operations
 type RawUploadHandler struct {

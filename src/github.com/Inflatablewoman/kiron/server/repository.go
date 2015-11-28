@@ -110,3 +110,12 @@ type Comment struct {
 	UserID        time.Time
 	Contents      string
 }
+
+// Document ...
+type Document struct {
+	ID             int
+	ApplicationID  int
+	DocumentTypeId int
+	UserID         int
+	Contents       string
+}
