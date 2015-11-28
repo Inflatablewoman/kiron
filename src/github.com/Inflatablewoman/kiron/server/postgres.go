@@ -62,6 +62,9 @@ func (r postgresRepository) GetUses() ([]*User, error) {
 }
 
 func (r postgresRepository) GetUser(userID string) (*User, error) {
+	
+	
+	
 	return nil, nil
 }
 
@@ -80,6 +83,7 @@ func (r postgresRepository) GetUserByEmail(emailAddress string) (*User, error) {
 	var (
 		id   int
 		name string
+		
 	)
 
 	defer rows.Close()
@@ -95,7 +99,7 @@ func (r postgresRepository) GetUserByEmail(emailAddress string) (*User, error) {
 		return nil, err
 	}
 
-	user := User{ID: id, EmailAddress: emailAddress, FirstName: name}
+	user := User{ID: id, EmailAddress: emailAddress, FirstName: name, LastName: }
 
 	return &user, nil
 }
@@ -108,10 +112,6 @@ func (r postgresRepository) DeleteUser(userID int) error {
 	res, err := stmt.Exec(userID)
 	if err != nil {
 		return err
-	}
-	lastID, err := res.LastInsertId()
-	if err != nil {
-		log.Printf("Got error - LastInsertId: %v", err)
 	}
 	rowCnt, err := res.RowsAffected()
 	if err != nil {
@@ -131,10 +131,6 @@ func (r postgresRepository) SetUser(user *User) error {
 	res, err := stmt.Exec(user.EmailAddress, user.FirstName, user.LastName, user.Password, user.Created, user.Role.Value())
 	if err != nil {
 		return err
-	}
-	lastID, err := res.LastInsertId()
-	if err != nil {
-		log.Printf("Got error - LastInsertId: %v", err)
 	}
 	rowCnt, err := res.RowsAffected()
 	if err != nil {

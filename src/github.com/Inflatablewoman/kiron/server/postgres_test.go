@@ -38,7 +38,7 @@ func TestPostgres(t *testing.T) {
 	require.Equal(t, firstName, repoUser.FirstName)
 	require.True(t, repoUser.ID > 0)
 
-	t.Logf("Adding user: %v", repoUser)
+	t.Logf("Got user: %v", repoUser)
 
 	err = repo.DeleteUser(repoUser.ID)
 	require.NoError(t, err)
