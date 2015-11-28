@@ -81,11 +81,13 @@ func createUser(u *url.URL, h http.Header, request *createUserRequest, context *
 
 	log.Println("createUser called by: %s %s", context.RemoteAddr, context.UserAgent)
 
-	user := User{EmailAddress: request.EmailAddress, Password: request.Password, FirstName: request.Name, LastName: request.LastName}
+	hashedPassword, _ := createHashedPassword(request.Password)
+	user := User{EmailAddress: request.EmailAddress, Password: hashedPassword, FirstName: request.Name, LastName: request.LastName, Role: RoleAdmin}
 
 	err = repository.SetUser(&user)
 
 	if err != nil {
+		log.Printf("Unable to set user: %v", err)
 		return http.StatusInternalServerError, nil, nil, nil
 	}
 

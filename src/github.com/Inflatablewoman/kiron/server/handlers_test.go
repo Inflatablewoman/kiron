@@ -49,6 +49,8 @@ func TestCreateUser(t *testing.T) {
 	response, err := client.Do(request)
 	require.NoError(t, err)
 
+	require.Equal(t, http.StatusOK, response.StatusCode)
+
 	body, err := ioutil.ReadAll(response.Body)
 	require.NoError(t, err)
 
@@ -59,6 +61,4 @@ func TestCreateUser(t *testing.T) {
 	require.Equal(t, emailAddress, repoUser.EmailAddress)
 	require.Equal(t, firstName, repoUser.FirstName)
 	require.Equal(t, lastName, repoUser.LastName)
-	require.Equal(t, RoleAdmin, repoUser.Role)
-	require.True(t, repoUser.ID > 0)
 }
