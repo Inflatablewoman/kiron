@@ -27,23 +27,20 @@ func getPostgresDB(connectionString string) (DataRepository, error) {
 	return pr, nil
 }
 
-func (r postgresRepository) GetUser(userID string) (*User, error) {
+func (r postgresRepository) GetApplications() ([]Application, error)                { return nil, nil }
+func (r postgresRepository) GetApplication(applicationID int) (*Application, error) { return nil, nil }
+func (r postgresRepository) SetApplication(application *Application) error          { return nil }
+func (r postgresRepository) DeleteApplication(applicationID int) error              { return nil }
 
-	return &User{}, nil
-}
+func (r postgresRepository) GetComments() ([]Comment, error)   { return nil, nil }
+func (r postgresRepository) GetComment(commentID int) *Comment { return nil }
+func (r postgresRepository) DeleteComment(commentID int) error { return nil }
 
-func (r postgresRepository) DeleteUser(userID string) error {
-	return nil
-}
+func (r postgresRepository) GetUsers() ([]*User, error)           { return nil, nil }
+func (r postgresRepository) GetUser(userID string) (*User, error) { return nil, nil }
+func (r postgresRepository) DeleteUser(userID string) error       { return nil }
+func (r postgresRepository) SetUser(*User) error                  { return nil }
 
-func (r postgresRepository) SetUser(*User) error {
-	return nil
-}
-
-func (r postgresRepository) StoreDocument(documentID string, data []byte) error {
-	return nil
-}
-
-func (r postgresRepository) GetDocument(documentID string) ([]byte, error) {
-	return []byte{}, nil
-}
+func (r postgresRepository) StoreDocument(documentID string, data []byte) error { return nil }
+func (r postgresRepository) GetDocument(documentID string) ([]byte, error)      { return nil, nil }
+func (r postgresRepository) DeleteDocument(documentID string) error             { return nil }
