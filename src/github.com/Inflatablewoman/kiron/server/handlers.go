@@ -221,17 +221,23 @@ func createApplication(u *url.URL, h http.Header, request createApplicationReque
 	return http.StatusCreated, nil, &application, nil
 }
 
-func getDocuments(u *url.URL, h http.Header, _ interface{}) (int, http.Header, []*Document, error) {
+func getDocuments(u *url.URL, h http.Header, _ interface{}) (int, http.Header, [][]byte, error) {
 	var err error
 	defer CatchPanic(&err, "getDocuments")
 
 	log.Println("getDocuments Started")
 
-	// TODO Implement functionality
-	//documents := nil
+	userID := u.Query().Get("userID")
+	applicationID := u.Query().Get("applicationID")
+
+	documents, err := repository.GetDocuments(userID, applicationID)
+
+	if err != nil {
+		return http.StatusInternalServerError, nil, nil, nil
+	}
 
 	// All good!
-	return http.StatusOK, nil, nil, nil
+	return http.StatusOK, nil, documents, nil
 }
 
 func createDocuments(u *url.URL, h http.Header, _ interface{}) (int, http.Header, []*Document, error) {
