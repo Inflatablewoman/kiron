@@ -122,3 +122,19 @@ type Document struct {
 	UserID         int
 	Contents       string
 }
+
+// LoginResponse ...
+type LoginResponse struct {
+	Token       int
+	TokenExpory int
+	Result      LoginResult
+}
+
+// LoginResult  ...
+type LoginResult struct {
+	ID           int
+	EmailAddress string
+	FirstName    string
+	LastName     string
+	Role         role
+}

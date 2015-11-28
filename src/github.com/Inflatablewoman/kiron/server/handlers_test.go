@@ -1,10 +1,13 @@
 package server
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -29,44 +32,33 @@ func TestCreateUser(t *testing.T) {
 	password := "bobtown"
 
 	// Test create user
-	cur := createUserRequest{EmailAddress: emailAddress, FirstName: firstName, LastName: lastName, Password: password}
+	cur := createUserRequest{EmailAddress: emailAddress, Name: firstName, LastName: lastName, Password: password}
 
-	t.Logf("Adding user: %v", user)
+	t.Logf("Adding user: %v", cur)
 
 	requestBytes, err := json.Marshal(cur)
-	if err != nil {
-		return nil, err
-	}
+	require.NoError(t, err)
 
 	request, err := http.NewRequest("POST", curURL, bytes.NewBuffer(requestBytes))
-	if err != nil {
-		return nil, err
-	}
+	require.NoError(t, err)
 
 	request.Header.Set("Content-Type", "application/json")
 
+	client := http.DefaultClient
+
 	response, err := client.Do(request)
-	if err != nil {
-		return nil, err
-	}
+	require.NoError(t, err)
+
+	require.Equal(t, http.StatusOK, response.StatusCode)
 
 	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return nil, err
-	}
+	require.NoError(t, err)
 
 	var repoUser User
-	err = json.Unmarshal(body, &user)
-	if err != nil {
-		return nil, err
-	}
-
+	err = json.Unmarshal(body, &repoUser)
 	require.NoError(t, err)
+
 	require.Equal(t, emailAddress, repoUser.EmailAddress)
 	require.Equal(t, firstName, repoUser.FirstName)
 	require.Equal(t, lastName, repoUser.LastName)
-	require.Equal(t, bcryptPassword, repoUser.Password)
-	require.WithinDuration(t, created, repoUser.Created, time.Duration(5*time.Second))
-	require.Equal(t, RoleAdmin, repoUser.Role)
-	require.True(t, repoUser.ID > 0)
 }

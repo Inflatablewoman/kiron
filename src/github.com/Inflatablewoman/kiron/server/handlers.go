@@ -36,6 +36,9 @@ func getContext(r *http.Request) (http.Header, error) {
 func RegisterHTTPHandlers(mux *tigertonic.TrieServeMux) {
 
 	// Create user
+	mux.Handle("POST", "/api/v1/login", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(login)), AuthContext{}))
+
+	// Create user
 	mux.Handle("POST", "/api/v1/users", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(createUser)), AuthContext{}))
 
 	// Get users
@@ -67,6 +70,22 @@ func RegisterHTTPHandlers(mux *tigertonic.TrieServeMux) {
 
 }
 
+type loginRequest struct {
+	EmailAddress string `json:"email"`
+	Password     string `json:"password"`
+}
+
+// login
+func login(u *url.URL, h http.Header, request *loginRequest, context *AuthContext) (int, http.Header, *LoginResponse, error) {
+	var err error
+	defer CatchPanic(&err, "login")
+
+	log.Println("login called by: %s %s", context.RemoteAddr, context.UserAgent)
+
+	// All good!
+	return http.StatusOK, nil, nil, nil
+}
+
 type createUserRequest struct {
 	EmailAddress string `json:"email"`
 	Password     string `json:"password"`
@@ -75,17 +94,19 @@ type createUserRequest struct {
 }
 
 // createUser will create a user
-func createUser(u *url.URL, h http.Header, request createUserRequest) (int, http.Header, *User, error) {
+func createUser(u *url.URL, h http.Header, request *createUserRequest, context *AuthContext) (int, http.Header, *User, error) {
 	var err error
 	defer CatchPanic(&err, "createUser")
 
-	log.Println("createUser Started")
+	log.Println("createUser called by: %s %s", context.RemoteAddr, context.UserAgent)
 
-	user := User{EmailAddress: request.EmailAddress, Password: request.Password, FirstName: request.Name, LastName: request.LastName}
+	hashedPassword, _ := createHashedPassword(request.Password)
+	user := User{EmailAddress: request.EmailAddress, Password: hashedPassword, FirstName: request.Name, LastName: request.LastName, Role: RoleAdmin}
 
 	err = repository.SetUser(&user)
 
 	if err != nil {
+		log.Printf("Unable to set user: %v", err)
 		return http.StatusInternalServerError, nil, nil, nil
 	}
 
