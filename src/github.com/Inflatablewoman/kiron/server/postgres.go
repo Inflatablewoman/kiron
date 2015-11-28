@@ -19,6 +19,7 @@ func getPostgresDB(connectionString string) (DataRepository, error) {
 }
 
 func (r postgresRepository) GetUser(userID string) (*User, error) {
+
 	return &User{}, nil
 }
 
