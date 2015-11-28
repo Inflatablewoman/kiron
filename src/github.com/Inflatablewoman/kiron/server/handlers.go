@@ -75,11 +75,11 @@ type createUserRequest struct {
 }
 
 // createUser will create a user
-func createUser(u *url.URL, h http.Header, request createUserRequest) (int, http.Header, *User, error) {
+func createUser(u *url.URL, h http.Header, request *createUserRequest, context *AuthContext) (int, http.Header, *User, error) {
 	var err error
 	defer CatchPanic(&err, "createUser")
 
-	log.Println("createUser Started")
+	log.Println("createUser called by: %s %s", context.RemoteAddr, context.UserAgent)
 
 	user := User{EmailAddress: request.EmailAddress, Password: request.Password, FirstName: request.Name, LastName: request.LastName}
 
