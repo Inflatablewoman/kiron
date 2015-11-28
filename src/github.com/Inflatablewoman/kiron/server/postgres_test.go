@@ -18,8 +18,12 @@ func TestPostgres(t *testing.T) {
 	// Test create user
 	user := User{EmailAddress: emailAddress, FirstName: firstName}
 
+	t.Logf("Adding user: %v", user)
+
 	err = repo.SetUser(&user)
 	require.NoError(t, err)
+
+	t.Log("User Set")
 
 	repoUser, err := repo.GetUserByEmail(emailAddress)
 	require.NoError(t, err)
@@ -27,6 +31,10 @@ func TestPostgres(t *testing.T) {
 	require.Equal(t, firstName, repoUser.FirstName)
 	require.True(t, repoUser.ID > 0)
 
+	t.Logf("Adding user: %v", repoUser)
+
 	err = repo.DeleteUser(repoUser.ID)
 	require.NoError(t, err)
+
+	t.Log("User deleted")
 }

@@ -67,7 +67,7 @@ func (r postgresRepository) GetUser(userID string) (*User, error) {
 
 func (r postgresRepository) GetUserByEmail(emailAddress string) (*User, error) {
 	log.Printf("Going to get user by email address %v", emailAddress)
-	stmt, err := r.db.Prepare("SELECT id, name FROM users WHERE email=$N")
+	stmt, err := r.db.Prepare("SELECT id, name FROM users WHERE email=$1")
 	if err != nil {
 		return nil, err
 	}
@@ -86,13 +86,13 @@ func (r postgresRepository) GetUserByEmail(emailAddress string) (*User, error) {
 	for rows.Next() {
 		err := rows.Scan(&id, &name)
 		if err != nil {
-			log.Fatal(err)
+			return nil, err
 		}
 		log.Println(id, name)
 	}
 
 	if err = rows.Err(); err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	user := User{ID: id, EmailAddress: emailAddress, FirstName: name}
@@ -101,21 +101,21 @@ func (r postgresRepository) GetUserByEmail(emailAddress string) (*User, error) {
 }
 
 func (r postgresRepository) DeleteUser(userID int) error {
-	stmt, err := r.db.Prepare("DELETE FROM users WHERE id = $N")
+	stmt, err := r.db.Prepare("DELETE FROM users WHERE id = $1")
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	res, err := stmt.Exec(userID)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	lastID, err := res.LastInsertId()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	rowCnt, err := res.RowsAffected()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	log.Printf("ID = %d, affected = %d\n", lastID, rowCnt)
 
@@ -123,21 +123,21 @@ func (r postgresRepository) DeleteUser(userID int) error {
 }
 func (r postgresRepository) SetUser(user *User) error {
 
-	stmt, err := r.db.Prepare("INSERT INTO users(emailAddress, name) VALUES($N,$N)")
+	stmt, err := r.db.Prepare("INSERT INTO users(emailAddress, name) VALUES($1, $2)")
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	res, err := stmt.Exec(user.EmailAddress, user.FirstName)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	lastID, err := res.LastInsertId()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	rowCnt, err := res.RowsAffected()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	log.Printf("ID = %d, affected = %d\n", lastID, rowCnt)
 
