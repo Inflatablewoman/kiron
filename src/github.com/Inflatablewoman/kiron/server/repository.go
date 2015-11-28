@@ -61,6 +61,7 @@ type User struct {
 	FirstName    string
 	LastName     string
 	Password     string
+	Created      time.Time
 	Role         role
 }
 
@@ -115,7 +116,7 @@ type Comment struct {
 type Document struct {
 	ID             int
 	ApplicationID  int
-	DocumentTypeId int
+	DocumentTypeID int
 	UserID         int
 	Contents       string
 }

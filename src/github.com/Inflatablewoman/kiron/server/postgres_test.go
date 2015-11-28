@@ -2,6 +2,7 @@ package server
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -14,9 +15,15 @@ func TestPostgres(t *testing.T) {
 
 	emailAddress := "neil@thepetshop.boys"
 	firstName := "neil"
+	lastName := "waterman"
+
+	password := "westEndGirls"
+	// In test have very low complex
+	bcryptPassword, err := createHashedPassword(password)
+	require.NoError(t, err)
 
 	// Test create user
-	user := User{EmailAddress: emailAddress, FirstName: firstName}
+	user := User{EmailAddress: emailAddress, FirstName: firstName, LastName: lastName, Password: bcryptPassword, Created: time.Now().UTC(), Role: RoleApplication}
 
 	t.Logf("Adding user: %v", user)
 

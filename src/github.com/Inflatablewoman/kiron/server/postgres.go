@@ -138,13 +138,14 @@ func (r postgresRepository) DeleteUser(userID int) error {
 
 	return nil
 }
+
 func (r postgresRepository) SetUser(user *User) error {
 
-	stmt, err := r.db.Prepare("INSERT INTO users(emailAddress, name) VALUES($1, $2)")
+	stmt, err := r.db.Prepare("INSERT INTO users(email, name, lastname, password, created_at, role_id) VALUES($1, $2, $3, $4, $5, $6)")
 	if err != nil {
 		return err
 	}
-	res, err := stmt.Exec(user.EmailAddress, user.FirstName)
+	res, err := stmt.Exec(user.EmailAddress, user.FirstName, user.LastName, user.Password, user.Created, user.Role.Value())
 	if err != nil {
 		return err
 	}
