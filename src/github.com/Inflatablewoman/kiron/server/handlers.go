@@ -63,6 +63,9 @@ func RegisterHTTPHandlers(mux *tigertonic.TrieServeMux) {
 	// Create comment
 	mux.Handle("POST", "/api/v1/users/{userID}/application/{applicationID}/comments", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(createComment)), AuthContext{}))
 
+	// Create comment
+	mux.Handle("DELETE", "/api/v1/users/{userID}/application/{applicationID}/comments/{commentID}", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(deleteComment)), AuthContext{}))
+
 }
 
 // createUser will create a user
@@ -75,7 +78,7 @@ func createUser(u *url.URL, h http.Header, _ interface{}) (int, http.Header, *Us
 	user := User{EmailAddress: "example@brainloop.com"}
 
 	// All good!
-	return http.StatusOK, nil, &user, nil
+	return http.StatusCreated, nil, &user, nil
 }
 
 // getUser will get a user
@@ -169,7 +172,7 @@ func createDocuments(u *url.URL, h http.Header, _ interface{}) (int, http.Header
 	//documents := nil
 
 	// All good!
-	return http.StatusOK, nil, nil, nil
+	return http.StatusCreated, nil, nil, nil
 }
 
 func getComments(u *url.URL, h http.Header, _ interface{}) (int, http.Header, []*Comment, error) {
@@ -190,6 +193,19 @@ func createComment(u *url.URL, h http.Header, _ interface{}) (int, http.Header, 
 	defer CatchPanic(&err, "createComment")
 
 	log.Println("createComment Started")
+
+	// TODO Implement functionality
+	//comment := nil
+
+	// All good!
+	return http.StatusOK, nil, nil, nil
+}
+
+func deleteComment(u *url.URL, h http.Header, _ interface{}) (int, http.Header, *Comment, error) {
+	var err error
+	defer CatchPanic(&err, "deleteComment")
+
+	log.Println("deleteComment Started")
 
 	// TODO Implement functionality
 	//comment := nil
