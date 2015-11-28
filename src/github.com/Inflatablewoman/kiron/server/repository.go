@@ -15,6 +15,12 @@ func InitDatabase(connectionString string) error {
 
 // DataRepository is a repository
 type DataRepository interface {
+	GetApplications() ([]Application, error)
+	GetApplication(applicationID int) (Application, error)
+	SetApplication(application *Application) error
+	DeleteApplication(applicationID int) error
+	GetComments() ([]Comment, error)
+	GetComment(commentID int) (Comment x)
 	GetUser(userID string) (*User, error)
 	DeleteUser(userID string) error
 	SetUser(*User) error
