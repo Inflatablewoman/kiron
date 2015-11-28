@@ -36,6 +36,9 @@ func getContext(r *http.Request) (http.Header, error) {
 func RegisterHTTPHandlers(mux *tigertonic.TrieServeMux) {
 
 	// Create user
+	mux.Handle("POST", "/api/v1/login", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(login)), AuthContext{}))
+
+	// Create user
 	mux.Handle("POST", "/api/v1/users", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(createUser)), AuthContext{}))
 
 	// Get users
@@ -65,6 +68,22 @@ func RegisterHTTPHandlers(mux *tigertonic.TrieServeMux) {
 	// Create comment
 	mux.Handle("POST", "/api/v1/users/{userID}/application/{applicationID}/comments", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(createComment)), AuthContext{}))
 
+}
+
+type loginRequest struct {
+	EmailAddress string `json:"email"`
+	Password     string `json:"password"`
+}
+
+// login
+func login(u *url.URL, h http.Header, request *loginRequest, context *AuthContext) (int, http.Header, *LoginResponse, error) {
+	var err error
+	defer CatchPanic(&err, "login")
+
+	log.Println("login called by: %s %s", context.RemoteAddr, context.UserAgent)
+
+	// All good!
+	return http.StatusOK, nil, nil, nil
 }
 
 type createUserRequest struct {
