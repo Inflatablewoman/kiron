@@ -44,11 +44,6 @@ func RegisterHTTPHandlers(mux *tigertonic.TrieServeMux) {
 
 }
 
-// User is the users struct
-type User struct {
-	EmailAddress string
-}
-
 // createUser will create a user
 func createUser(u *url.URL, h http.Header, _ interface{}) (int, http.Header, *User, error) {
 	var err error
