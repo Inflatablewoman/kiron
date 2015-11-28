@@ -1,30 +1,31 @@
 package main
 
 import (
+	"fmt"
 	"github.com/Inflatablewoman/kiron/server"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"flag"
-	"fmt"
-
 	"github.com/rcrowley/go-tigertonic"
-)
-
-var (
-	host = flag.String("host", "localhost", "Host Address")
-	port = flag.Int("port", 1979, "The Post")
 )
 
 func main() {
 
-	flag.Parse()
+	host := os.Getenv("KIRON_HOST")
+	if host == "" {
+		host = "localhost"
+	}
+
+	port := os.Getenv("KIRON_PORT")
+	if port == "" {
+		port = "80"
+	}
 
 	// Setup logging
 	log.SetFlags(log.Ldate | log.Ltime)
-	log.Printf("Starting Kiron Service - Port: %s", fmt.Sprintf(":%d", *port))
+	log.Printf("Starting Kiron Service - Port: %s", fmt.Sprintf("%s:%s", host, port))
 
 	err := server.InitDatabase()
 	if err != nil {
@@ -39,7 +40,7 @@ func main() {
 	aMux := tigertonic.ApacheLogged(mux)
 
 	// Create server and listen to requests
-	server := tigertonic.NewServer(fmt.Sprintf(":%d", *port), aMux)
+	server := tigertonic.NewServer(fmt.Sprintf("%s:%s", host, port), aMux)
 	// server.Close to stop gracefully.
 	go func() {
 		if err := server.ListenAndServe(); err != nil {

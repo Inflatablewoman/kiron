@@ -21,8 +21,8 @@ type DataRepository interface {
 	SetApplication(application *Application) error
 	DeleteApplication(applicationID int) error
 
-	GetComments(applicationID) ([]*Comment, error)
-	GetComment(commendID int) *Comment
+	GetComments(applicationID int) ([]*Comment, error)
+	GetComment(commentID int) (*Comment, error)
 	DeleteComment(commentID int) error
 
 	GetUsers() ([]User, error)
@@ -97,7 +97,6 @@ type Application struct {
 	AddressExtra          string
 	FirstPageOfSurveyData string
 	Gender                string
-	StudyProgram          string
 	UserID                int
 	EducationLevel        int
 	Status                status
@@ -110,8 +109,8 @@ type Application struct {
 type Comment struct {
 	ID            int
 	Created       time.Time
-	ApplicationID time.Time
-	UserID        time.Time
+	ApplicationID int
+	UserID        int
 	Contents      string
 }
 
