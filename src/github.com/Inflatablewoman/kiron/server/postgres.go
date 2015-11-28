@@ -2,6 +2,7 @@ package server
 
 import (
 	"database/sql"
+	_ "github.com/lib/pq"
 	"log"
 )
 
@@ -10,11 +11,19 @@ type postgresRepository struct {
 }
 
 func getPostgresDB(connectionString string) (DataRepository, error) {
+
 	db, err := sql.Open("postgres", connectionString)
 	if err != nil {
 		log.Fatalf("Unable to connect to postgres %v", err)
 	}
+
+	err = db.Ping()
+	if err != nil {
+		log.Fatalf("Unable to connect to postgres %v", err)
+	}
+
 	pr := postgresRepository{db: db}
+
 	return pr, nil
 }
 
