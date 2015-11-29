@@ -2,6 +2,7 @@ package server
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 	"os"
 	"time"
@@ -691,6 +692,10 @@ func (r postgresRepository) GetToken(tokenValue string) (*Token, error) {
 	rows, err := stmt.Query(tokenValue)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(rows) == 0 {
+		return nil, errors.New("Not found")
 	}
 
 	var (
