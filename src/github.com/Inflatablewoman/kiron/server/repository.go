@@ -76,6 +76,11 @@ type User struct {
 	Role         role
 }
 
+func (u *User) ToRestUser() *RestUser {
+	ru := RestUser{ID: u.ID, EmailAddress: u.EmailAddress}
+	return &ru
+}
+
 // Status ...
 type status string
 

@@ -565,9 +565,54 @@ func (r postgresRepository) DeleteDocument(documentID string) error {
 }
 
 func (r postgresRepository) GetToken(tokenValue string) (*Token, error) {
-	return nil, nil
+	log.Printf("Going to get token by value: %v", tokenValue)
+	stmt, err := r.db.Prepare("SELECT user_id, token, expires FROM auth_tokens WHERE token=$1")
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := stmt.Query(tokenValue)
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		user_id int
+		expires time.Time
+	)
+
+	defer rows.Close()
+	for rows.Next() {
+		err := rows.Scan(&user_id, &expires)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	token := Token{UserID: user_id, Value: tokenValue, Expires: expires}
+
+	return &token, nil
 }
+
 func (r postgresRepository) SetToken(token *Token) error {
+	stmt, err := r.db.Prepare("INSERT INTO auth_tokens(user_id, token, expires) VALUES($1, $2, $3)")
+	if err != nil {
+		return err
+	}
+	res, err := stmt.Exec(token.UserID, token.Value, token.Expires)
+	if err != nil {
+		return err
+	}
+	rowCnt, err := res.RowsAffected()
+	if err != nil {
+		log.Printf("Got error - RowsAffected: %v", err)
+	}
+	log.Printf("affected = %d\n", rowCnt)
+
 	return nil
 }
 func (r postgresRepository) DelToken(tokenValue string) error {

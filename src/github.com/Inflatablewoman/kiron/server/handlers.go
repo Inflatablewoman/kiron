@@ -145,6 +145,15 @@ func login(u *url.URL, h http.Header, request *loginRequest, context *AuthContex
 	return http.StatusOK, nil, &lResp, nil
 }
 
+type RestUser struct {
+	ID           int
+	EmailAddress string
+	FirstName    string
+	LastName     string
+	Created      time.Time
+	Role         role
+}
+
 type createUserRequest struct {
 	EmailAddress string `json:"email"`
 	Password     string `json:"password"`
@@ -153,7 +162,7 @@ type createUserRequest struct {
 }
 
 // createUser will create a user
-func createUser(u *url.URL, h http.Header, request *createUserRequest, context *AuthContext) (int, http.Header, *User, error) {
+func createUser(u *url.URL, h http.Header, request *createUserRequest, context *AuthContext) (int, http.Header, *RestUser, error) {
 	var err error
 	defer CatchPanic(&err, "createUser")
 
@@ -173,8 +182,10 @@ func createUser(u *url.URL, h http.Header, request *createUserRequest, context *
 		return http.StatusInternalServerError, nil, nil, nil
 	}
 
+	ru := user.ToRestUser()
+
 	// All good!
-	return http.StatusOK, nil, &user, nil
+	return http.StatusOK, nil, ru, nil
 }
 
 // getUser will get a user
