@@ -141,7 +141,7 @@ func TestPostgresTokens(t *testing.T) {
 	repo, err := getPostgresDB()
 	require.NoError(t, err)
 
-	expiry := time.Now().UTC().Add(-time.Duration(2 * time.Hour))
+	expiry := time.Now().UTC()
 
 	token := Token{UserID: 1, Value: "Myawesometoken", Expires: expiry}
 
@@ -159,12 +159,12 @@ func TestPostgresTokens(t *testing.T) {
 
 	t.Logf("Got Token: %v", repoToken)
 
-	err = repo.DelToken(token.Value)
+	err = repo.DelToken(repoToken.Value)
 	require.NoError(t, err)
 
-	repoToken, err = repo.GetToken(token.Value)
+	deletedToken, err := repo.GetToken(token.Value)
 	// It should have been deleted
-	require.Nil(t, repoToken)
+	require.Nil(t, deletedToken)
 
 	t.Log("Test Token deleted")
 
