@@ -15,8 +15,6 @@ import (
 
 var client = http.DefaultClient
 
-type emptyRequest struct{}
-
 func TestCreateAndLoginUser(t *testing.T) {
 
 	host := os.Getenv("KIRON_HOST")
@@ -164,6 +162,7 @@ func TestCreateAndLoginUser(t *testing.T) {
 	require.NoError(t, err)
 
 	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Authorization", "Bearer "+loginResp.Token)
 
 	response, err = client.Do(request)
 	require.NoError(t, err)
