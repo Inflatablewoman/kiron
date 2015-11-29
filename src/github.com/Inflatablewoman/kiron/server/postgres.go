@@ -694,10 +694,6 @@ func (r postgresRepository) GetToken(tokenValue string) (*Token, error) {
 		return nil, err
 	}
 
-	if len(rows) == 0 {
-		return nil, errors.New("Not found")
-	}
-
 	var (
 		userID  int
 		expires time.Time
@@ -713,6 +709,10 @@ func (r postgresRepository) GetToken(tokenValue string) (*Token, error) {
 
 	if err = rows.Err(); err != nil {
 		return nil, err
+	}
+
+	if userID == 0 {
+		return nil, errors.New("Not found")
 	}
 
 	token := Token{UserID: userID, Value: tokenValue, Expires: expires}
