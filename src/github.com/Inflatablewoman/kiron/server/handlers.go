@@ -22,6 +22,7 @@ type AuthContext struct {
 	UserAgent  string
 	RemoteAddr string
 	User       *User
+	TokenValue string
 }
 
 // getContext is used check the Auth of a user
@@ -31,6 +32,8 @@ func getContext(r *http.Request) (http.Header, error) {
 	tigertonic.Context(r).(*AuthContext).RemoteAddr = RequestAddr(r)
 
 	tokenValue := GetBearerAuthFromHeader(r.Header)
+
+	tigertonic.Context(r).(*AuthContext).TokenValue = tokenValue
 
 	if tokenValue == "" {
 		log.Println("No token passed")
@@ -87,6 +90,8 @@ func RegisterHTTPHandlers(mux *tigertonic.TrieServeMux) {
 
 	// Create user
 	mux.Handle("POST", "/api/v1/login", tigertonic.WithContext(tigertonic.If(getBasicContext, tigertonic.Marshaled(login)), BasicContext{}))
+
+	mux.Handle("POST", "/api/va/logout", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(logout)), AuthContext{}))
 
 	// Create user
 	mux.Handle("POST", "/api/v1/users", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(createUser)), AuthContext{}))
@@ -180,6 +185,20 @@ func login(u *url.URL, h http.Header, request *loginRequest, context *BasicConte
 	return http.StatusOK, nil, &lResp, nil
 }
 
+// logout will logout a session
+func logout(u *url.URL, h http.Header, _ interface{}, context *AuthContext) (int, http.Header, interface{}, error) {
+	var err error
+	defer CatchPanic(&err, "logout")
+
+	err = repository.DelToken(context.TokenValue)
+	if err != nil {
+		log.Printf("Error deleting token: %v", err)
+		return http.StatusInternalServerError, nil, nil, errors.New("Unable to delete token")
+	}
+
+	return http.StatusOK, nil, nil, nil
+}
+
 // RestUser ...
 type RestUser struct {
 	ID           int       `json:"id"`
@@ -251,7 +270,7 @@ func getUsers(u *url.URL, h http.Header, _ interface{}, context *AuthContext) (i
 
 	log.Println("getUsers Started")
 
-	if context.User.Role != RoleAdmin || context.User.Role != RoleSubAdmin {
+	if context.User.Role != RoleAdmin && context.User.Role != RoleSubAdmin {
 		return http.StatusUnauthorized, nil, nil, errors.New("Access denied")
 	}
 
@@ -272,6 +291,11 @@ func getApplications(u *url.URL, h http.Header, _ interface{}, context *AuthCont
 
 	log.Println("getApplications Started")
 
+	// Logged in applicant is trying to access a list of applications
+	if context.User.Role == RoleApplication {
+		return http.StatusUnauthorized, nil, nil, errors.New("Access denied")
+	}
+
 	applications, err := repository.GetApplications()
 
 	if err != nil {
@@ -282,6 +306,11 @@ func getApplications(u *url.URL, h http.Header, _ interface{}, context *AuthCont
 
 	for _, application := range applications {
 		restApplication := application.ToRestApplication()
+
+		if context.User.Role == RoleLimitedHelper {
+			trimForLimitedHelper(restApplication)
+		}
+
 		restApplications = append(restApplications, restApplication)
 	}
 
@@ -289,7 +318,7 @@ func getApplications(u *url.URL, h http.Header, _ interface{}, context *AuthCont
 	return http.StatusOK, nil, restApplications, nil
 }
 
-// getApplication will get a list of applications
+// getApplication will get an application
 func getApplication(u *url.URL, h http.Header, _ interface{}, context *AuthContext) (int, http.Header, *RestApplication, error) {
 	var err error
 	defer CatchPanic(&err, "getApplication")
@@ -298,14 +327,25 @@ func getApplication(u *url.URL, h http.Header, _ interface{}, context *AuthConte
 
 	userID, err := strconv.Atoi(u.Query().Get("userID"))
 
+	// Logged in applicant is trying to view another user's application
+	if context.User.Role == RoleApplication && context.User.ID != userID {
+		return http.StatusUnauthorized, nil, nil, errors.New("Access denied")
+	}
+
 	application, err := repository.GetApplicationOf(userID)
 
 	if err != nil {
 		return http.StatusInternalServerError, nil, nil, nil
 	}
 
+	restApplication := application.ToRestApplication()
+
+	if context.User.Role == RoleLimitedHelper {
+		trimForLimitedHelper(restApplication)
+	}
+
 	// All good!
-	return http.StatusOK, nil, application.ToRestApplication(), nil
+	return http.StatusOK, nil, restApplication, nil
 }
 
 // RestApplication ...
@@ -328,6 +368,21 @@ type RestApplication struct {
 	Status                string    `json:"status"`
 	Created               time.Time `json:"created_at"`
 	Edited                time.Time `json:"edited_at"`
+}
+
+// trimForLimitedHelper trims some fields so that limited helper cannot view them
+func trimForLimitedHelper(application *RestApplication) *RestApplication {
+	application.PhoneNumber = ""
+	application.Nationality = ""
+	application.Address = ""
+	application.AddressExtra = ""
+	application.Zip = ""
+	application.City = ""
+	application.Country = ""
+	application.FirstPageOfSurveyData = ""
+	application.Gender = ""
+	application.EducationLevel = 0
+	return application
 }
 
 type createApplicationRequest struct {
@@ -453,7 +508,18 @@ func (handler RawUploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 	defer CatchPanic(&err, "BlockRawUploadHandler")
 	log.Println("Got PUT upload request")
 
-	//userID := r.URL.Query().Get("userID")
+	header, err := getContext(r)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	// Can I do this?
+	context := tigertonic.Context(r).(*AuthContext)
+
+	userID := context.User.ID
+	applicationID, err := strconv.Atoi(r.Header.Get("applicationID"))
+	documentTypeID, err := strconv.Atoi(r.Header.Get("documentTypeID"))
 
 	defer r.Body.Close()
 	body, err := ioutil.ReadAll(r.Body)
@@ -462,9 +528,16 @@ func (handler RawUploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	log.Printf("Save body %v", body)
+	document := Document{ApplicationID: applicationID, DocumentTypeID: documentTypeID, UserID: userID, Contents: body}
+
+	err = repository.StoreDocument(&document)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	w.WriteHeader(http.StatusCreated)
+
 }
 
 // FileDownloadHandler ...

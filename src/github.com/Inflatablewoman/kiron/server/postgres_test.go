@@ -46,7 +46,7 @@ func TestPostgres(t *testing.T) {
 	t.Logf("Got user: %v", repoUser)
 
 	lastName = "waterboy"
-	repoUser.LastName = lastName 
+	repoUser.LastName = lastName
 	err = repo.UpdateUser(repoUser)
 	require.NoError(t, err)
 
@@ -68,10 +68,14 @@ func TestPostgres(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Log("User deleted")
-	
+
 }
 
 func TestPostgresApplications(t *testing.T) {
+
+	// Connect
+	repo, err := getPostgresDB()
+	require.NoError(t, err)
 
 	// test Application functions
 	created := time.Now().UTC()
@@ -100,7 +104,7 @@ func TestPostgresApplications(t *testing.T) {
 	repoAppl, err := repo.GetApplicationOf(600)
 	require.NoError(t, err)
 
-	t.Logf("Set application: %v", repoAppl);
+	t.Logf("Set application: %v", repoAppl)
 
 	require.WithinDuration(t, created, repoAppl.Birthday, time.Duration(5*time.Second))
 	require.Equal(t, "555", repoAppl.PhoneNumber)
@@ -120,7 +124,7 @@ func TestPostgresApplications(t *testing.T) {
 
 	t.Logf("Got Application: %v", repoAppl)
 
-	repoAppl.Nationality = "venusian" 
+	repoAppl.Nationality = "venusian"
 	err = repo.UpdateApplication(repoAppl)
 	require.NoError(t, err)
 
