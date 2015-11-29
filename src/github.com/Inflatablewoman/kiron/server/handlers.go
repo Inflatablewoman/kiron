@@ -61,8 +61,8 @@ type BasicContext struct {
 // getContext is used to return UserAgent and Request info from the request
 func getBasicContext(r *http.Request) (http.Header, error) {
 
-	tigertonic.Context(r).(*AuthContext).UserAgent = r.UserAgent()
-	tigertonic.Context(r).(*AuthContext).RemoteAddr = RequestAddr(r)
+	tigertonic.Context(r).(*BasicContext).UserAgent = r.UserAgent()
+	tigertonic.Context(r).(*BasicContext).RemoteAddr = RequestAddr(r)
 
 	return nil, nil
 }
@@ -115,23 +115,31 @@ func login(u *url.URL, h http.Header, request *loginRequest, context *BasicConte
 	var err error
 	defer CatchPanic(&err, "login")
 
-	log.Printf("login called by: %s %s", context.RemoteAddr, context.UserAgent)
+	log.Printf("login called: %s %s", context.RemoteAddr, context.UserAgent)
 
 	if request.EmailAddress == "" {
+		log.Println("Error:  No email address")
 		return http.StatusBadRequest, nil, nil, errors.New("You must provide an email address")
 	}
 
 	if request.Password == "" {
+		log.Println("Error:  No password")
 		return http.StatusBadRequest, nil, nil, errors.New("You must provide a password")
 	}
 
 	user, err := repository.GetUserByEmail(request.EmailAddress)
 	if err != nil {
+		log.Printf("Error:  Unable to get user from repo: %v", err)
 		return http.StatusUnauthorized, nil, nil, errors.New("Invalid password or unknown user")
 	}
 
 	bcryptPass, _ := createHashedPassword(request.Password)
 	if bcryptPass != user.Password {
+		log.Printf("Password: '%s'", request.Password)
+		log.Printf("hashPassword: %s", bcryptPass)
+		log.Printf("storedPass: %s", user.Password)
+
+		log.Println("Error:  Password is incorrect")
 		return http.StatusUnauthorized, nil, nil, errors.New("Invalid password or unknown user")
 	}
 
@@ -143,6 +151,7 @@ func login(u *url.URL, h http.Header, request *loginRequest, context *BasicConte
 	// Save token to database
 	err = repository.SetToken(&t)
 	if err != nil {
+		log.Printf("Error:  Unable to get token from repo: %v", err)
 		return http.StatusInternalServerError, nil, nil, errors.New("Internal error")
 	}
 
