@@ -33,23 +33,302 @@ func getPostgresDB() (DataRepository, error) {
 	return pr, nil
 }
 
-func (r postgresRepository) GetApplications() ([]Application, error) {
+func (r postgresRepository) GetApplications() ([]*Application, error) {
+	log.Printf("Going to get all applications. This is not gonna happen.")
 	return nil, nil
+}
+
+func (r postgresRepository) GetApplicationsByStatus(status string) ([]*Application, error) {
+	log.Printf("Going to get all applications for status %s", status)
+	stmt, err := r.db.Prepare("SELECT id, birthday, phone, nationality, country, city, zip, address, address_extra, first_page_of_survey_data, gender, study_program, user_id, education_level_id, status, blocked_until, created_at, edited_at FROM application WHERE status=$1")
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := stmt.Query(status)
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		id                    int
+		birthday              time.Time
+		phoneNumber           string
+		nationality           string
+		country               string
+		city                  string
+		zip                   string
+		address               string
+		addressExtra          string
+		firstPageOfSurveyData string
+		gender                string
+		studyProgram          int
+		userID                int
+		educationLevel        int
+		blockExpires          time.Time
+		created               time.Time
+		edited                time.Time
+		applications          []*Application
+	)
+
+	defer rows.Close()
+	for rows.Next() {
+		err := rows.Scan(&id, &birthday, &phoneNumber, &nationality, &country, &city, &zip, &address, &addressExtra, &firstPageOfSurveyData, &gender, &studyProgram, &userID, &educationLevel, &status, &blockExpires, &created, &edited)
+		if err != nil {
+			return nil, err
+		}
+		log.Println(id, birthday, phoneNumber, nationality, country, city, zip, address, addressExtra, firstPageOfSurveyData, gender, studyProgram, userID, educationLevel, status, blockExpires, created, edited)
+		application := Application{
+			ID:                    id,
+			Birthday:              birthday,
+			PhoneNumber:           phoneNumber,
+			Nationality:           nationality,
+			Country:               country,
+			City:                  city,
+			Zip:                   zip,
+			Address:               address,
+			AddressExtra:          addressExtra,
+			FirstPageOfSurveyData: firstPageOfSurveyData,
+			Gender:                gender,
+			UserID:                userID,
+			EducationLevel:        educationLevel,
+			Status:                status,
+			BlockExpires:          blockExpires,
+			Created:               created,
+			Edited:                edited}
+
+		applications = append(applications, &application)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return applications, nil
 }
 
 func (r postgresRepository) GetApplication(applicationID int) (*Application, error) {
-	return nil, nil
+	log.Printf("Going to application with id %d", applicationID)
+	stmt, err := r.db.Prepare("SELECT id, birthday, phone, nationality, country, city, zip, address, address_extra, first_page_of_survey_data, gender, study_program, user_id, education_level_id, status, blocked_until, created_at, edited_at FROM application WHERE id=$1")
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := stmt.Query(applicationID)
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		id                    int
+		birthday              time.Time
+		phoneNumber           string
+		nationality           string
+		country               string
+		city                  string
+		zip                   string
+		address               string
+		addressExtra          string
+		firstPageOfSurveyData string
+		gender                string
+		studyProgram          int
+		userID                int
+		educationLevel        int
+		blockExpires          time.Time
+		status                string
+		created               time.Time
+		edited                time.Time
+	)
+
+	defer rows.Close()
+	for rows.Next() {
+		err := rows.Scan(&id, &birthday, &phoneNumber, &nationality, &country, &city, &zip, &address, &addressExtra, &firstPageOfSurveyData, &gender, &studyProgram, &userID, &educationLevel, &status, &blockExpires, &created, &edited)
+		if err != nil {
+			return nil, err
+		}
+		log.Println(id, birthday, phoneNumber, nationality, country, city, zip, address, addressExtra, firstPageOfSurveyData, gender, studyProgram, userID, educationLevel, status, blockExpires, created, edited)
+
+	}
+
+	application := Application{
+		ID:                    id,
+		Birthday:              birthday,
+		PhoneNumber:           phoneNumber,
+		Nationality:           nationality,
+		Country:               country,
+		City:                  city,
+		Zip:                   zip,
+		Address:               address,
+		AddressExtra:          addressExtra,
+		FirstPageOfSurveyData: firstPageOfSurveyData,
+		Gender:                gender,
+		UserID:                userID,
+		EducationLevel:        educationLevel,
+		Status:                status,
+		BlockExpires:          blockExpires,
+		Created:               created,
+		Edited:                edited}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return &application, nil
 }
 
 func (r postgresRepository) GetApplicationOf(userID int) (*Application, error) {
-	return nil, nil
+			log.Printf("Going to get application for user with id %d", userID)
+	stmt, err := r.db.Prepare("SELECT id, birthday, phone, nationality, country, city, zip, address, address_extra, first_page_of_survey_data, gender, study_program, user_id, education_level_id, status, blocked_until, created_at, edited_at FROM application WHERE user_id=$1")
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := stmt.Query(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		id int
+		birthday time.Time
+		phoneNumber string
+		nationality string
+		country string
+		city string
+		zip string
+		address string
+		addressExtra string
+		firstPageOfSurveyData string
+		gender string
+		studyProgram int
+		educationLevel int
+		blockExpires time.Time
+		status string
+		created time.Time
+		edited time.Time
+	)
+
+	defer rows.Close()
+	for rows.Next() {
+		err := rows.Scan(&id, &birthday, &phoneNumber, &nationality, &country, &city, &zip, &address, &addressExtra, &firstPageOfSurveyData, &gender, &studyProgram, &userID, &educationLevel, &status, &blockExpires, &created, &edited)
+		if err != nil {
+			return nil, err
+		}
+		log.Println(id, birthday, phoneNumber, nationality, country, city, zip, address, addressExtra, firstPageOfSurveyData, gender, studyProgram, userID, educationLevel, status, blockExpires, created, edited)
+			
+	}
+
+	application := Application{
+		ID: id,
+		Birthday: birthday,
+		PhoneNumber: phoneNumber,
+		Nationality: nationality,
+		Country: country,
+		City: city,
+		Zip: zip,
+		Address: address,
+		AddressExtra: addressExtra,
+		FirstPageOfSurveyData: firstPageOfSurveyData,
+		Gender: gender,
+		UserID: userID,
+		EducationLevel: educationLevel,
+		Status: status,
+		BlockExpires: blockExpires,
+		Created: created,
+		Edited: edited}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return &application, nil
 }
 
 func (r postgresRepository) SetApplication(application *Application) error {
+	stmt, err := r.db.Prepare("INSERT INTO applications(birthday, phone, nationality, country, city, zip, address, address_extra, first_page_of_survey_data, gender, study_program, user_id, education_level_id, status, blocked_until, created_at, edited_at) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)")
+	if err != nil {
+		return err
+	}
+	res, err := stmt.Exec(
+		application.Birthday,
+		application.PhoneNumber,
+		application.Nationality,
+		application.Country,
+		application.City,
+		application.Zip,
+		application.Address,
+		application.AddressExtra,
+		application.FirstPageOfSurveyData,
+		application.Gender,
+		application.UserID,
+		application.EducationLevel,
+		application.Status,
+		application.BlockExpires,
+		application.Created,
+		application.Edited)
+	if err != nil {
+		return err
+	}
+	rowCnt, err := res.RowsAffected()
+	if err != nil {
+		log.Printf("Got error - RowsAffected: %v", err)
+	}
+	log.Printf("affected = %d\n", rowCnt)
+
 	return nil
 }
 
+func (r postgresRepository) UpdateApplication(application *Application) error {
+	stmt, err := r.db.Prepare("UPDATE applications SET (birthday=$1, phone=$2, nationality=$3, country=$4, city=$5, zip=$6, address=$7, address_extra=$8, first_page_of_survey_data=$9, gender=$10, study_program=$11, user_id=$12, education_level_id=$12, status=$13, blocked_until=$14, created_at=$15, edited_at=$16) WHERE id=$17")
+	if err != nil {
+		return err
+	}
+	res, err := stmt.Exec(
+		application.Birthday,
+		application.PhoneNumber,
+		application.Nationality,
+		application.Country,
+		application.City,
+		application.Zip,
+		application.Address,
+		application.AddressExtra,
+		application.FirstPageOfSurveyData,
+		application.Gender,
+		application.UserID,
+		application.EducationLevel,
+		application.Status,
+		application.BlockExpires,
+		application.Created,
+		application.Edited,
+		application.ID)
+	if err != nil {
+		return err
+	}
+	rowCnt, err := res.RowsAffected()
+	if err != nil {
+		log.Printf("Got error - RowsAffected: %v", err)
+	}
+	log.Printf("affected = %d\n", rowCnt)
+
+	return nil
+}
+
+// we actually don't delete an application. Still, we need this function for Data Protection Law
 func (r postgresRepository) DeleteApplication(applicationID int) error {
+	stmt, err := r.db.Prepare("DELETE FROM applications WHERE id=$1")
+	if err != nil {
+		return err
+	}
+	res, err := stmt.Exec(applicationID)
+	if err != nil {
+		return err
+	}
+	rowCnt, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	log.Printf("Rows affected = %d\n", rowCnt)
+
 	return nil
 }
 
@@ -127,6 +406,10 @@ func (r postgresRepository) GetComment(commentID int) (*Comment, error) {
 	comment := Comment{ID: commentID, Created: createdAt, ApplicationID: applicationID, UserID: userID, Contents: contents}
 
 	return &comment, nil
+}
+
+func (r postgresRepository) SetComment(comment *Comment) error {
+	return nil
 }
 
 func (r postgresRepository) DeleteComment(commentID int) error {

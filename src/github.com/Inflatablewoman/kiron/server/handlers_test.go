@@ -26,7 +26,7 @@ func TestCreateUser(t *testing.T) {
 
 	curURL := fmt.Sprintf("http://%s:%s/api/v1/users", host, port)
 
-	emailAddress := "bob@bob.com"
+	emailAddress := "steve@bob.com"
 	firstName := "bob"
 	lastName := "bobo"
 	password := "bobtown"

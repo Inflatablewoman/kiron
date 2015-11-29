@@ -15,13 +15,16 @@ func InitDatabase() error {
 
 // DataRepository is a repository
 type DataRepository interface {
-	GetApplications() ([]Application, error)
+	GetApplications() ([]*Application, error) // this cannot return all applications, at least not with files.
+	GetApplicationsByStatus(status string) ([]*Application, error)
 	GetApplication(applicationID int) (*Application, error)
 	GetApplicationOf(userID int) (*Application, error)
 	SetApplication(application *Application) error
+	UpdateApplication(application *Application) error
 	DeleteApplication(applicationID int) error
 
 	GetComments(applicationID int) ([]*Comment, error)
+	SetComment(comment *Comment) error
 	GetComment(commentID int) (*Comment, error)
 	DeleteComment(commentID int) error
 
@@ -74,7 +77,7 @@ type User struct {
 }
 
 // Status ...
-type status int
+type status string
 
 const statusNone = 0
 
@@ -88,6 +91,9 @@ const (
 	statusAccepted
 )
 
+// ALlowed stati
+var allowedStati = []string{"received", "confirmed", "inVerfication", "verified", "waitingForResponse", "rejected", "accepted"}
+
 // Allowed education types
 var allowedEducationTypes = []string{"none", "elementary", "secondary", "associate", "bachelor"}
 
@@ -100,12 +106,13 @@ type Application struct {
 	Country               string
 	City                  string
 	Zip                   string
+	Address               string
 	AddressExtra          string
 	FirstPageOfSurveyData string
 	Gender                string
 	UserID                int
 	EducationLevel        int
-	Status                status
+	Status                string
 	BlockExpires          time.Time
 	Created               time.Time
 	Edited                time.Time
