@@ -425,10 +425,9 @@ func getDocuments(u *url.URL, h http.Header, _ interface{}, context *AuthContext
 
 	log.Println("getDocuments Started")
 
-	userID := u.Query().Get("userID")
-	applicationID := u.Query().Get("applicationID")
+	applicationID, err := strconv.Atoi(u.Query().Get("applicationID"))
 
-	documents, err := repository.GetDocuments(userID, applicationID)
+	documents, err := repository.GetDocuments(applicationID)
 
 	if err != nil {
 		return http.StatusInternalServerError, nil, nil, nil
@@ -508,7 +507,17 @@ func (handler RawUploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 	defer CatchPanic(&err, "BlockRawUploadHandler")
 	log.Println("Got PUT upload request")
 
-	//userID := r.URL.Query().Get("userID")
+	_, err = getContext(r)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	// Can I do this?
+	//context := tigertonic.Context(r).(*AuthContext)
+
+	applicationID, err := strconv.Atoi(r.Header.Get("applicationID"))
+	documentTypeID, err := strconv.Atoi(r.Header.Get("documentTypeID"))
 
 	defer r.Body.Close()
 	body, err := ioutil.ReadAll(r.Body)
@@ -517,9 +526,16 @@ func (handler RawUploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	log.Printf("Save body %v", body)
+	document := Document{ApplicationID: applicationID, DocumentTypeID: documentTypeID, Contents: body}
+
+	err = repository.StoreDocument(&document)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	w.WriteHeader(http.StatusCreated)
+
 }
 
 // FileDownloadHandler ...
