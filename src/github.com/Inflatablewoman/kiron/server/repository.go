@@ -32,8 +32,9 @@ type DataRepository interface {
 	GetUsers() ([]User, error)
 	GetUser(userID int) (*User, error)
 	GetUserByEmail(emailAddress string) (*User, error)
-	DeleteUser(userID int) error
 	SetUser(*User) error
+	UpdateUser(*User) error
+	DeleteUser(userID int) error
 
 	GetDocuments(userID string, applicationID string) ([][]byte, error)
 	StoreDocument(documentID string, data []byte) error
