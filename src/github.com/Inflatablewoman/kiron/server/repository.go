@@ -1,6 +1,7 @@
 package server
 
 import (
+	"log"
 	"time"
 )
 
@@ -124,6 +125,25 @@ type Application struct {
 	BlockExpires          time.Time
 	Created               time.Time
 	Edited                time.Time
+}
+
+// ToRestApplication converts repo version of Application to RestApplication
+func (a *Application) ToRestApplication() *RestApplication {
+	user, err := repository.GetUser(a.UserID)
+
+	if err != nil {
+		log.Println("An application without user reference found.")
+		return nil
+	}
+
+	ru := RestApplication{
+		ID: a.ID, UserID: a.UserID, FirstName: user.FirstName,
+		LastName: user.LastName, Birthday: a.Birthday, PhoneNumber: a.PhoneNumber,
+		Nationality: a.Nationality, Address: a.Address, AddressExtra: a.AddressExtra,
+		Zip: a.Zip, City: a.City, Country: a.Country, FirstPageOfSurveyData: a.FirstPageOfSurveyData,
+		Gender: a.Gender, EducationLevel: a.EducationLevel, Status: a.Status,
+		Created: a.Created, Edited: a.Edited}
+	return &ru
 }
 
 // Comment ...

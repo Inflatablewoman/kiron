@@ -32,6 +32,11 @@ func getContext(r *http.Request) (http.Header, error) {
 
 	tokenValue := GetBearerAuthFromHeader(r.Header)
 
+	if tokenValue == "" {
+		log.Println("No token passed")
+		return nil, tigertonic.Unauthorized{Err: errors.New("Access denied")}
+	}
+
 	// Check token is valid
 	token, err := repository.GetToken(tokenValue)
 	if err != nil {
@@ -39,10 +44,20 @@ func getContext(r *http.Request) (http.Header, error) {
 		return nil, tigertonic.Unauthorized{Err: errors.New("Access denied")}
 	}
 
+	if token == nil || token.Value == "" {
+		log.Println("Token not found")
+		return nil, tigertonic.Unauthorized{Err: errors.New("Access denied")}
+	}
+
 	// Get user
 	user, err := repository.GetUser(token.UserID)
 	if err != nil {
 		log.Printf("Error getting user: %v", err)
+		return nil, tigertonic.Unauthorized{Err: errors.New("Access denied")}
+	}
+
+	if user.ID == 0 {
+		log.Println("User not found")
 		return nil, tigertonic.Unauthorized{Err: errors.New("Access denied")}
 	}
 
@@ -133,12 +148,8 @@ func login(u *url.URL, h http.Header, request *loginRequest, context *BasicConte
 		return http.StatusUnauthorized, nil, nil, errors.New("Invalid password or unknown user")
 	}
 
-	bcryptPass, _ := createHashedPassword(request.Password)
-	if bcryptPass != user.Password {
-		log.Printf("Password: '%s'", request.Password)
-		log.Printf("hashPassword: %s", bcryptPass)
-		log.Printf("storedPass: %s", user.Password)
-
+	match, _ := MatchPassword(request.Password, user.Password)
+	if !match {
 		log.Println("Error:  Password is incorrect")
 		return http.StatusUnauthorized, nil, nil, errors.New("Invalid password or unknown user")
 	}
@@ -240,6 +251,10 @@ func getUsers(u *url.URL, h http.Header, _ interface{}, context *AuthContext) (i
 
 	log.Println("getUsers Started")
 
+	if context.User.Role != RoleAdmin || context.User.Role != RoleSubAdmin {
+		return http.StatusUnauthorized, nil, nil, errors.New("Access denied")
+	}
+
 	users, err := repository.GetUsers()
 
 	if err != nil {
@@ -251,7 +266,7 @@ func getUsers(u *url.URL, h http.Header, _ interface{}, context *AuthContext) (i
 }
 
 // getApplications will get a list of all (???) applications
-func getApplications(u *url.URL, h http.Header, _ interface{}, context *AuthContext) (int, http.Header, []*Application, error) {
+func getApplications(u *url.URL, h http.Header, _ interface{}, context *AuthContext) (int, http.Header, []*RestApplication, error) {
 	var err error
 	defer CatchPanic(&err, "getApplications")
 
@@ -263,12 +278,19 @@ func getApplications(u *url.URL, h http.Header, _ interface{}, context *AuthCont
 		return http.StatusInternalServerError, nil, nil, nil
 	}
 
+	var restApplications []*RestApplication
+
+	for _, application := range applications {
+		restApplication := application.ToRestApplication()
+		restApplications = append(restApplications, restApplication)
+	}
+
 	// All good!
-	return http.StatusOK, nil, applications, nil
+	return http.StatusOK, nil, restApplications, nil
 }
 
 // getApplication will get a list of applications
-func getApplication(u *url.URL, h http.Header, _ interface{}, context *AuthContext) (int, http.Header, *Application, error) {
+func getApplication(u *url.URL, h http.Header, _ interface{}, context *AuthContext) (int, http.Header, *RestApplication, error) {
 	var err error
 	defer CatchPanic(&err, "getApplication")
 
@@ -283,7 +305,29 @@ func getApplication(u *url.URL, h http.Header, _ interface{}, context *AuthConte
 	}
 
 	// All good!
-	return http.StatusOK, nil, application, nil
+	return http.StatusOK, nil, application.ToRestApplication(), nil
+}
+
+// RestApplication ...
+type RestApplication struct {
+	ID                    int       `json:"id"`
+	UserID                int       `json:"user_id"`
+	FirstName             string    `json:"name"`
+	LastName              string    `json:"lastname"`
+	Birthday              time.Time `json:"birthday"`
+	PhoneNumber           string    `json:"phone"`
+	Nationality           string    `json:"nationality"`
+	Address               string    `json:"address"`
+	AddressExtra          string    `json:"address_extra"`
+	Zip                   string    `json:"zip"`
+	City                  string    `json:"city"`
+	Country               string    `json:"country"`
+	FirstPageOfSurveyData string    `json:"first_page_of_survey_data"`
+	Gender                string    `json:"gender"`
+	EducationLevel        int       `json:"education_level_id"`
+	Status                string    `json:"status"`
+	Created               time.Time `json:"created_at"`
+	Edited                time.Time `json:"edited_at"`
 }
 
 type createApplicationRequest struct {
@@ -297,11 +341,10 @@ type createApplicationRequest struct {
 	Country               string    `json:"country"`
 	FirstPageOfSurveyData string    `json:"first_page_of_survey_data"`
 	Gender                string    `json:"gender"`
-	StudyProgram          string    `json:"study_program"`
 	EducationLevel        int       `json:"education_level_id"`
 }
 
-func createApplication(u *url.URL, h http.Header, request *createApplicationRequest, context *AuthContext) (int, http.Header, *Application, error) {
+func createApplication(u *url.URL, h http.Header, request *createApplicationRequest, context *AuthContext) (int, http.Header, *RestApplication, error) {
 	var err error
 	defer CatchPanic(&err, "createApplications")
 
@@ -318,7 +361,7 @@ func createApplication(u *url.URL, h http.Header, request *createApplicationRequ
 	}
 
 	// All good!
-	return http.StatusCreated, nil, &application, nil
+	return http.StatusCreated, nil, application.ToRestApplication(), nil
 }
 
 func getDocuments(u *url.URL, h http.Header, _ interface{}, context *AuthContext) (int, http.Header, [][]byte, error) {
