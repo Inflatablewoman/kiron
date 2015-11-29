@@ -113,7 +113,7 @@ func RegisterHTTPHandlers(mux *tigertonic.TrieServeMux) {
 	mux.Handle("POST", "/api/v1/users/{userID}/application", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(createApplication)), AuthContext{}))
 
 	// Get documents
-	mux.Handle("GET", "/api/v1/users/{userID}/application/{applicationID}/documents", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(getDocuments)), AuthContext{}))
+	mux.Handle("GET", "/api/v1/users/{userID}/application/{applicationID}/documents", NewFileDownloadHandler())
 
 	// Create documents
 	mux.Handle("PUT", "/api/v1/users/{userID}/application/{applicationID}/documents", NewRawUploadHandler())
