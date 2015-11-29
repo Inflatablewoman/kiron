@@ -59,7 +59,7 @@ drop table if exists auth_tokens cascade;
 create table auth_tokens (
   user_id integer references users not null,
   token text not null,
-  expires integer not null
+  expires timestamp not null
 );
 
 drop table if exists applications cascade;
