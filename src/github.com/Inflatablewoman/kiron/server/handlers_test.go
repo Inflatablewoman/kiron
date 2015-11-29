@@ -101,6 +101,7 @@ func TestCreateAndLoginUser(t *testing.T) {
 	require.NoError(t, err)
 
 	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Authorization", "Bearer "+loginResp.Token)
 
 	response, err = client.Do(request)
 	require.NoError(t, err)
@@ -110,7 +111,7 @@ func TestCreateAndLoginUser(t *testing.T) {
 	body, err = ioutil.ReadAll(response.Body)
 	require.NoError(t, err)
 
-	var repoUser User
+	var repoUser RestUser
 	err = json.Unmarshal(body, &repoUser)
 	require.NoError(t, err)
 

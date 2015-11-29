@@ -598,7 +598,7 @@ func (r postgresRepository) DeleteDocument(documentID string) error {
 
 func (r postgresRepository) GetToken(tokenValue string) (*Token, error) {
 	log.Printf("Going to get token by value: %v", tokenValue)
-	stmt, err := r.db.Prepare("SELECT user_id, token, expires FROM auth_tokens WHERE token=$1")
+	stmt, err := r.db.Prepare("SELECT user_id, expires FROM auth_tokens WHERE token=$1")
 	if err != nil {
 		return nil, err
 	}
