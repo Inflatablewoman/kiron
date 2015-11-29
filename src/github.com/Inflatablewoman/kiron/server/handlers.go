@@ -24,7 +24,7 @@ type AuthContext struct {
 	User       *User
 }
 
-// getContext is used to return UserAgent and Request info from the request
+// getContext is used check the Auth of a user
 func getContext(r *http.Request) (http.Header, error) {
 
 	tigertonic.Context(r).(*AuthContext).UserAgent = r.UserAgent()
@@ -52,11 +52,26 @@ func getContext(r *http.Request) (http.Header, error) {
 	return nil, nil
 }
 
+// BasicContext information for Marshaled calls
+type BasicContext struct {
+	UserAgent  string
+	RemoteAddr string
+}
+
+// getContext is used to return UserAgent and Request info from the request
+func getBasicContext(r *http.Request) (http.Header, error) {
+
+	tigertonic.Context(r).(*AuthContext).UserAgent = r.UserAgent()
+	tigertonic.Context(r).(*AuthContext).RemoteAddr = RequestAddr(r)
+
+	return nil, nil
+}
+
 // RegisterHTTPHandlers registers the http handlers
 func RegisterHTTPHandlers(mux *tigertonic.TrieServeMux) {
 
 	// Create user
-	mux.Handle("POST", "/api/v1/login", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(login)), AuthContext{}))
+	mux.Handle("POST", "/api/v1/login", tigertonic.WithContext(tigertonic.If(getBasicContext, tigertonic.Marshaled(login)), BasicContext{}))
 
 	// Create user
 	mux.Handle("POST", "/api/v1/users", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(createUser)), AuthContext{}))
@@ -96,7 +111,7 @@ type loginRequest struct {
 }
 
 // login
-func login(u *url.URL, h http.Header, request *loginRequest, context *AuthContext) (int, http.Header, *LoginResponse, error) {
+func login(u *url.URL, h http.Header, request *loginRequest, context *BasicContext) (int, http.Header, *LoginResponse, error) {
 	var err error
 	defer CatchPanic(&err, "login")
 
@@ -145,6 +160,7 @@ func login(u *url.URL, h http.Header, request *loginRequest, context *AuthContex
 	return http.StatusOK, nil, &lResp, nil
 }
 
+// RestUser ...
 type RestUser struct {
 	ID           int
 	EmailAddress string
@@ -189,7 +205,7 @@ func createUser(u *url.URL, h http.Header, request *createUserRequest, context *
 }
 
 // getUser will get a user
-func getUser(u *url.URL, h http.Header, _ interface{}) (int, http.Header, *User, error) {
+func getUser(u *url.URL, h http.Header, _ interface{}, context *AuthContext) (int, http.Header, *User, error) {
 	var err error
 	defer CatchPanic(&err, "getUser")
 
@@ -208,7 +224,7 @@ func getUser(u *url.URL, h http.Header, _ interface{}) (int, http.Header, *User,
 }
 
 // getUsers will get a user
-func getUsers(u *url.URL, h http.Header, _ interface{}) (int, http.Header, []User, error) {
+func getUsers(u *url.URL, h http.Header, _ interface{}, context *AuthContext) (int, http.Header, []User, error) {
 	var err error
 	defer CatchPanic(&err, "getUsers")
 
@@ -225,7 +241,7 @@ func getUsers(u *url.URL, h http.Header, _ interface{}) (int, http.Header, []Use
 }
 
 // getApplications will get a list of all (???) applications
-func getApplications(u *url.URL, h http.Header, _ interface{}) (int, http.Header, []*Application, error) {
+func getApplications(u *url.URL, h http.Header, _ interface{}, context *AuthContext) (int, http.Header, []*Application, error) {
 	var err error
 	defer CatchPanic(&err, "getApplications")
 
@@ -242,7 +258,7 @@ func getApplications(u *url.URL, h http.Header, _ interface{}) (int, http.Header
 }
 
 // getApplication will get a list of applications
-func getApplication(u *url.URL, h http.Header, _ interface{}) (int, http.Header, *Application, error) {
+func getApplication(u *url.URL, h http.Header, _ interface{}, context *AuthContext) (int, http.Header, *Application, error) {
 	var err error
 	defer CatchPanic(&err, "getApplication")
 
@@ -275,7 +291,7 @@ type createApplicationRequest struct {
 	EducationLevel        int       `json:"education_level_id"`
 }
 
-func createApplication(u *url.URL, h http.Header, request createApplicationRequest) (int, http.Header, *Application, error) {
+func createApplication(u *url.URL, h http.Header, request *createApplicationRequest, context *AuthContext) (int, http.Header, *Application, error) {
 	var err error
 	defer CatchPanic(&err, "createApplications")
 
@@ -295,7 +311,7 @@ func createApplication(u *url.URL, h http.Header, request createApplicationReque
 	return http.StatusCreated, nil, &application, nil
 }
 
-func getDocuments(u *url.URL, h http.Header, _ interface{}) (int, http.Header, [][]byte, error) {
+func getDocuments(u *url.URL, h http.Header, _ interface{}, context *AuthContext) (int, http.Header, [][]byte, error) {
 	var err error
 	defer CatchPanic(&err, "getDocuments")
 
@@ -314,7 +330,7 @@ func getDocuments(u *url.URL, h http.Header, _ interface{}) (int, http.Header, [
 	return http.StatusOK, nil, documents, nil
 }
 
-func createDocuments(u *url.URL, h http.Header, _ interface{}) (int, http.Header, []*Document, error) {
+func createDocuments(u *url.URL, h http.Header, _ interface{}, context *AuthContext) (int, http.Header, []*Document, error) {
 	var err error
 	defer CatchPanic(&err, "createDocuments")
 
@@ -327,7 +343,7 @@ func createDocuments(u *url.URL, h http.Header, _ interface{}) (int, http.Header
 	return http.StatusOK, nil, nil, nil
 }
 
-func getComments(u *url.URL, h http.Header, _ interface{}) (int, http.Header, []*Comment, error) {
+func getComments(u *url.URL, h http.Header, _ interface{}, context *AuthContext) (int, http.Header, []*Comment, error) {
 	var err error
 	defer CatchPanic(&err, "getComments")
 
@@ -350,7 +366,7 @@ type createCommentRequest struct {
 	Contents string `json:"contents"`
 }
 
-func createComment(u *url.URL, h http.Header, request createCommentRequest) (int, http.Header, *Comment, error) {
+func createComment(u *url.URL, h http.Header, request *createCommentRequest, context *AuthContext) (int, http.Header, *Comment, error) {
 	var err error
 	defer CatchPanic(&err, "createComment")
 

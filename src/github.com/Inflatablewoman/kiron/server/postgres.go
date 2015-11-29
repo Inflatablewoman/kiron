@@ -422,7 +422,7 @@ func (r postgresRepository) SetComment(comment *Comment) error {
 		log.Printf("Got error - RowsAffected: %v", err)
 	}
 	log.Printf("affected = %d\n", rowCnt)
-	
+
 	return nil
 }
 
@@ -440,7 +440,7 @@ func (r postgresRepository) UpdateComment(comment *Comment) error {
 		log.Printf("Got error - RowsAffected: %v", err)
 	}
 	log.Printf("affected = %d\n", rowCnt)
-	
+
 	return nil
 }
 
@@ -609,13 +609,13 @@ func (r postgresRepository) GetToken(tokenValue string) (*Token, error) {
 	}
 
 	var (
-		user_id int
+		userID  int
 		expires time.Time
 	)
 
 	defer rows.Close()
 	for rows.Next() {
-		err := rows.Scan(&user_id, &expires)
+		err := rows.Scan(&userID, &expires)
 		if err != nil {
 			return nil, err
 		}
@@ -625,7 +625,7 @@ func (r postgresRepository) GetToken(tokenValue string) (*Token, error) {
 		return nil, err
 	}
 
-	token := Token{UserID: user_id, Value: tokenValue, Expires: expires}
+	token := Token{UserID: userID, Value: tokenValue, Expires: expires}
 
 	return &token, nil
 }
@@ -647,9 +647,25 @@ func (r postgresRepository) SetToken(token *Token) error {
 
 	return nil
 }
+
 func (r postgresRepository) DelToken(tokenValue string) error {
+	stmt, err := r.db.Prepare("DELETE FROM auth_tokens WHERE token = $1")
+	if err != nil {
+		return err
+	}
+	res, err := stmt.Exec(tokenValue)
+	if err != nil {
+		return err
+	}
+	rowCnt, err := res.RowsAffected()
+	if err != nil {
+		log.Printf("Got error - RowsAffected: %v", err)
+	}
+	log.Printf("affected = %d\n", rowCnt)
+
 	return nil
 }
+
 func (r postgresRepository) DelExpiredTokens() {
 	return
 }
