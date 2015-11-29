@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/rcrowley/go-tigertonic"
@@ -20,6 +21,7 @@ import (
 type AuthContext struct {
 	UserAgent  string
 	RemoteAddr string
+	User       *User
 }
 
 // getContext is used to return UserAgent and Request info from the request
@@ -29,6 +31,15 @@ func getContext(r *http.Request) (http.Header, error) {
 	tigertonic.Context(r).(*AuthContext).RemoteAddr = RequestAddr(r)
 
 	// TODO :  Do some basic auth
+
+	auth := r.Header.Get("Authorization")
+	tokenValue := strings.Replace(auth, "Bearer ", "", 1)
+
+	token, err := repository.GetToken(tokenValue)
+
+	user, err := repository.GetUser(token.UserID)
+
+	tigertonic.Context(r).(*AuthContext).User = user
 
 	return nil, nil
 }
@@ -139,6 +150,10 @@ func createUser(u *url.URL, h http.Header, request *createUserRequest, context *
 	defer CatchPanic(&err, "createUser")
 
 	log.Printf("createUser called by: %s %s", context.RemoteAddr, context.UserAgent)
+
+	if context.User.Role != RoleAdmin {
+		return http.StatusUnauthorized, nil, nil, errors.New("Access denied")
+	}
 
 	hashedPassword, _ := createHashedPassword(request.Password)
 	user := User{EmailAddress: request.EmailAddress, Password: hashedPassword, FirstName: request.Name, LastName: request.LastName, Role: RoleAdmin}
