@@ -413,7 +413,7 @@ func (r postgresRepository) SetComment(comment *Comment) error {
 	if err != nil {
 		return err
 	}
-	res, err := stmt.Exec(comment.Created, comment.ApplicationID, comment.UserID, user.Contents)
+	res, err := stmt.Exec(comment.Created, comment.ApplicationID, comment.UserID, comment.Contents)
 	if err != nil {
 		return err
 	}
