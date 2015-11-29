@@ -2,11 +2,11 @@ package server
 
 import (
 	"database/sql"
+	"log"
 	"os"
 	"time"
-	// Required
-	"log"
 
+	// Required
 	_ "github.com/lib/pq"
 )
 
@@ -244,4 +244,17 @@ func (r postgresRepository) GetDocument(documentID string) ([]byte, error) {
 }
 func (r postgresRepository) DeleteDocument(documentID string) error {
 	return nil
+}
+
+func (r postgresRepository) GetToken(tokenValue string) (*Token, error) {
+	return nil, nil
+}
+func (r postgresRepository) SetToken(token *Token) error {
+	return nil
+}
+func (r postgresRepository) DelToken(tokenValue string) error {
+	return nil
+}
+func (r postgresRepository) DelExpiredTokens() {
+	return
 }

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -80,10 +81,49 @@ func login(u *url.URL, h http.Header, request *loginRequest, context *AuthContex
 	var err error
 	defer CatchPanic(&err, "login")
 
-	log.Println("login called by: %s %s", context.RemoteAddr, context.UserAgent)
+	log.Printf("login called by: %s %s", context.RemoteAddr, context.UserAgent)
+
+	if request.EmailAddress == "" {
+		return http.StatusBadRequest, nil, nil, errors.New("You must provide an email address")
+	}
+
+	if request.Password == "" {
+		return http.StatusBadRequest, nil, nil, errors.New("You must provide a password")
+	}
+
+	user, err := repository.GetUserByEmail(request.EmailAddress)
+	if err != nil {
+		return http.StatusUnauthorized, nil, nil, errors.New("Invalid password or unknown user")
+	}
+
+	bcryptPass, _ := createHashedPassword(request.Password)
+	if bcryptPass != user.Password {
+		return http.StatusUnauthorized, nil, nil, errors.New("Invalid password or unknown user")
+	}
+
+	tokenValue := GetRandomString(16, "")
+	expires := time.Now().UTC().Add(time.Duration(1 * time.Hour))
+
+	t := Token{UserID: user.ID, Value: tokenValue, Expires: expires}
+
+	// Save token to database
+	err = repository.SetToken(&t)
+	if err != nil {
+		return http.StatusInternalServerError, nil, nil, errors.New("Internal error")
+	}
+
+	expiresSeconds := 3600 // seconds in 1 hour
+	lr := LoginResult{ID: user.ID,
+		EmailAddress: user.EmailAddress,
+		FirstName:    user.FirstName,
+		LastName:     user.LastName,
+		Role:         user.Role}
+	lResp := LoginResponse{Token: tokenValue,
+		TokenExpiry: expiresSeconds,
+		Result:      lr}
 
 	// All good!
-	return http.StatusOK, nil, nil, nil
+	return http.StatusOK, nil, &lResp, nil
 }
 
 type createUserRequest struct {
@@ -98,7 +138,7 @@ func createUser(u *url.URL, h http.Header, request *createUserRequest, context *
 	var err error
 	defer CatchPanic(&err, "createUser")
 
-	log.Println("createUser called by: %s %s", context.RemoteAddr, context.UserAgent)
+	log.Printf("createUser called by: %s %s", context.RemoteAddr, context.UserAgent)
 
 	hashedPassword, _ := createHashedPassword(request.Password)
 	user := User{EmailAddress: request.EmailAddress, Password: hashedPassword, FirstName: request.Name, LastName: request.LastName, Role: RoleAdmin}
