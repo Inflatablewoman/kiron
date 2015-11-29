@@ -41,7 +41,7 @@ func (r postgresRepository) GetApplications() ([]*Application, error) {
 
 func (r postgresRepository) GetApplicationsByStatus(status string) ([]*Application, error) {
 	log.Printf("Going to get all applications for status %s", status)
-	stmt, err := r.db.Prepare("SELECT id, birthday, phone, nationality, country, city, zip, address, address_extra, first_page_of_survey_data, gender, study_program, user_id, education_level_id, status, blocked_until, created_at, edited_at FROM application WHERE status=$1")
+	stmt, err := r.db.Prepare("SELECT id, birthday, phone, nationality, country, city, zip, address, address_extra, first_page_of_survey_data, gender, study_program, user_id, education_level_id, status, blocked_until, created_at, edited_at FROM applications WHERE status=$1")
 	if err != nil {
 		return nil, err
 	}
@@ -51,66 +51,44 @@ func (r postgresRepository) GetApplicationsByStatus(status string) ([]*Applicati
 		return nil, err
 	}
 
-	var (
-		id                    int
-		birthday              time.Time
-		phoneNumber           string
-		nationality           string
-		country               string
-		city                  string
-		zip                   string
-		address               string
-		addressExtra          string
-		firstPageOfSurveyData string
-		gender                string
-		studyProgram          int
-		userID                int
-		educationLevel        int
-		blockExpires          time.Time
-		created               time.Time
-		edited                time.Time
-		applications          []*Application
-	)
-
 	defer rows.Close()
+
+	var apps []*Application
 	for rows.Next() {
-		err := rows.Scan(&id, &birthday, &phoneNumber, &nationality, &country, &city, &zip, &address, &addressExtra, &firstPageOfSurveyData, &gender, &studyProgram, &userID, &educationLevel, &status, &blockExpires, &created, &edited)
+		app := &Application{}
+
+		err = rows.Scan(&app.ID,
+			&app.Birthday,
+			&app.PhoneNumber,
+			&app.Nationality,
+			&app.Country,
+			&app.City,
+			&app.Zip,
+			&app.Address,
+			&app.AddressExtra,
+			&app.FirstPageOfSurveyData,
+			&app.Gender,
+			&app.StudyProgram,
+			&app.UserID,
+			&app.EducationLevel,
+			&app.Status,
+			&app.BlockExpires,
+			&app.Created,
+			&app.Edited)
 		if err != nil {
+			log.Printf("Error with scan: %v", err)
 			return nil, err
 		}
-		log.Println(id, birthday, phoneNumber, nationality, country, city, zip, address, addressExtra, firstPageOfSurveyData, gender, studyProgram, userID, educationLevel, status, blockExpires, created, edited)
-		application := Application{
-			ID:                    id,
-			Birthday:              birthday,
-			PhoneNumber:           phoneNumber,
-			Nationality:           nationality,
-			Country:               country,
-			City:                  city,
-			Zip:                   zip,
-			Address:               address,
-			AddressExtra:          addressExtra,
-			FirstPageOfSurveyData: firstPageOfSurveyData,
-			Gender:                gender,
-			UserID:                userID,
-			EducationLevel:        educationLevel,
-			Status:                status,
-			BlockExpires:          blockExpires,
-			Created:               created,
-			Edited:                edited}
 
-		applications = append(applications, &application)
+		apps = append(apps, app)
 	}
 
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return applications, nil
+	return apps, nil
 }
 
 func (r postgresRepository) GetApplication(applicationID int) (*Application, error) {
 	log.Printf("Going to application with id %d", applicationID)
-	stmt, err := r.db.Prepare("SELECT id, birthday, phone, nationality, country, city, zip, address, address_extra, first_page_of_survey_data, gender, study_program, user_id, education_level_id, status, blocked_until, created_at, edited_at FROM application WHERE id=$1")
+	stmt, err := r.db.Prepare("SELECT id, birthday, phone, nationality, country, city, zip, address, address_extra, first_page_of_survey_data, gender, study_program, user_id, education_level_id, status, blocked_until, created_at, edited_at FROM applications WHERE id=$1")
 	if err != nil {
 		return nil, err
 	}
@@ -120,66 +98,61 @@ func (r postgresRepository) GetApplication(applicationID int) (*Application, err
 		return nil, err
 	}
 
-	var (
-		id                    int
-		birthday              time.Time
-		phoneNumber           string
-		nationality           string
-		country               string
-		city                  string
-		zip                   string
-		address               string
-		addressExtra          string
-		firstPageOfSurveyData string
-		gender                string
-		studyProgram          int
-		userID                int
-		educationLevel        int
-		blockExpires          time.Time
-		status                string
-		created               time.Time
-		edited                time.Time
-	)
-
 	defer rows.Close()
-	for rows.Next() {
-		err := rows.Scan(&id, &birthday, &phoneNumber, &nationality, &country, &city, &zip, &address, &addressExtra, &firstPageOfSurveyData, &gender, &studyProgram, &userID, &educationLevel, &status, &blockExpires, &created, &edited)
+
+	if rows.Next() {
+		app := &Application{}
+
+		err = rows.Scan(&app.ID,
+			&app.Birthday,
+			&app.PhoneNumber,
+			&app.Nationality,
+			&app.Country,
+			&app.City,
+			&app.Zip,
+			&app.Address,
+			&app.AddressExtra,
+			&app.FirstPageOfSurveyData,
+			&app.Gender,
+			&app.StudyProgram,
+			&app.UserID,
+			&app.EducationLevel,
+			&app.Status,
+			&app.BlockExpires,
+			&app.Created,
+			&app.Edited)
 		if err != nil {
+			log.Printf("Error with scan: %v", err)
 			return nil, err
 		}
-		log.Println(id, birthday, phoneNumber, nationality, country, city, zip, address, addressExtra, firstPageOfSurveyData, gender, studyProgram, userID, educationLevel, status, blockExpires, created, edited)
 
+		return app, nil
 	}
 
-	application := Application{
-		ID:                    id,
-		Birthday:              birthday,
-		PhoneNumber:           phoneNumber,
-		Nationality:           nationality,
-		Country:               country,
-		City:                  city,
-		Zip:                   zip,
-		Address:               address,
-		AddressExtra:          addressExtra,
-		FirstPageOfSurveyData: firstPageOfSurveyData,
-		Gender:                gender,
-		UserID:                userID,
-		EducationLevel:        educationLevel,
-		Status:                status,
-		BlockExpires:          blockExpires,
-		Created:               created,
-		Edited:                edited}
-
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return &application, nil
+	return nil, errors.New("Not found")
 }
 
 func (r postgresRepository) GetApplicationOf(userID int) (*Application, error) {
 	log.Printf("Going to get application for user with id %d", userID)
-	stmt, err := r.db.Prepare("SELECT id, birthday, phone, nationality, country, city, zip, address, address_extra, first_page_of_survey_data, gender, study_program, user_id, education_level_id, status, blocked_until, created_at, edited_at FROM applications WHERE user_id=$1")
+	stmt, err := r.db.Prepare(`SELECT id, 
+								birthday, 
+								phone, 
+								nationality, 
+								country, 
+								city, 
+								zip,
+								address, 
+								address_extra, 
+								first_page_of_survey_data, 
+								gender, 
+								study_program, 
+								user_id, 
+								education_level_id, 
+								status, 
+								blocked_until, 
+								created_at, 
+								edited_at 
+								FROM applications WHERE user_id=$1`)
 	if err != nil {
 		return nil, err
 	}
@@ -189,64 +162,61 @@ func (r postgresRepository) GetApplicationOf(userID int) (*Application, error) {
 		return nil, err
 	}
 
-	var (
-		id                    int
-		birthday              time.Time
-		phoneNumber           string
-		nationality           string
-		country               string
-		city                  string
-		zip                   string
-		address               string
-		addressExtra          string
-		firstPageOfSurveyData string
-		gender                string
-		studyProgram          int
-		educationLevel        int
-		blockExpires          time.Time
-		status                string
-		created               time.Time
-		edited                time.Time
-	)
-
 	defer rows.Close()
-	for rows.Next() {
-		err := rows.Scan(&id, &birthday, &phoneNumber, &nationality, &country, &city, &zip, &address, &addressExtra, &firstPageOfSurveyData, &gender, &studyProgram, &userID, &educationLevel, &status, &blockExpires, &created, &edited)
+
+	if rows.Next() {
+		app := &Application{}
+
+		err = rows.Scan(&app.ID,
+			&app.Birthday,
+			&app.PhoneNumber,
+			&app.Nationality,
+			&app.Country,
+			&app.City,
+			&app.Zip,
+			&app.Address,
+			&app.AddressExtra,
+			&app.FirstPageOfSurveyData,
+			&app.Gender,
+			&app.StudyProgram,
+			&app.UserID,
+			&app.EducationLevel,
+			&app.Status,
+			&app.BlockExpires,
+			&app.Created,
+			&app.Edited)
 		if err != nil {
+			log.Printf("Error with scan: %v", err)
 			return nil, err
 		}
-		log.Println(id, birthday, phoneNumber, nationality, country, city, zip, address, addressExtra, firstPageOfSurveyData, gender, studyProgram, userID, educationLevel, status, blockExpires, created, edited)
 
+		return app, nil
 	}
 
-	application := Application{
-		ID:                    id,
-		Birthday:              birthday,
-		PhoneNumber:           phoneNumber,
-		Nationality:           nationality,
-		Country:               country,
-		City:                  city,
-		Zip:                   zip,
-		Address:               address,
-		AddressExtra:          addressExtra,
-		FirstPageOfSurveyData: firstPageOfSurveyData,
-		Gender:                gender,
-		UserID:                userID,
-		EducationLevel:        educationLevel,
-		Status:                status,
-		BlockExpires:          blockExpires,
-		Created:               created,
-		Edited:                edited}
+	return nil, errors.New("Not found")
 
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return &application, nil
 }
 
 func (r postgresRepository) SetApplication(application *Application) error {
-	stmt, err := r.db.Prepare("INSERT INTO applications(birthday, phone, nationality, country, city, zip, address, address_extra, first_page_of_survey_data, gender, user_id, education_level_id, status, blocked_until, created_at, edited_at) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)")
+	stmt, err := r.db.Prepare(`INSERT INTO applications 
+								(birthday, 
+								phone, 
+								nationality, 
+								country, 
+								city, 
+								zip, 
+								address, 
+								address_extra, 
+								first_page_of_survey_data, 
+								gender, 
+								study_program, 
+								user_id, 
+								education_level_id, 
+								status, 
+								blocked_until, 
+								created_at, 
+								edited_at) 
+								VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`)
 	if err != nil {
 		return err
 	}
@@ -261,6 +231,7 @@ func (r postgresRepository) SetApplication(application *Application) error {
 		application.AddressExtra,
 		application.FirstPageOfSurveyData,
 		application.Gender,
+		application.StudyProgram,
 		application.UserID,
 		application.EducationLevel,
 		application.Status,
@@ -295,6 +266,7 @@ func (r postgresRepository) UpdateApplication(application *Application) error {
 		application.AddressExtra,
 		application.FirstPageOfSurveyData,
 		application.Gender,
+		application.StudyProgram,
 		application.UserID,
 		application.EducationLevel,
 		application.Status,
