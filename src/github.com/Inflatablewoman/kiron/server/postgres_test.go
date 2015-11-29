@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -13,7 +14,7 @@ func TestPostgres(t *testing.T) {
 	repo, err := getPostgresDB()
 	require.NoError(t, err)
 
-	emailAddress := "neil2@thepetshop.boys"
+	emailAddress := fmt.Sprintf("test_%s@%s.com", GetRandomString(5, ""), GetRandomString(5, ""))
 	firstName := "neil"
 	lastName := "waterman"
 	created := time.Now().UTC()
@@ -43,6 +44,18 @@ func TestPostgres(t *testing.T) {
 	require.True(t, repoUser.ID > 0)
 
 	t.Logf("Got user: %v", repoUser)
+
+	repoUser, err = repo.GetUser(repoUser.ID)
+	require.NoError(t, err)
+	require.Equal(t, emailAddress, repoUser.EmailAddress)
+	require.Equal(t, firstName, repoUser.FirstName)
+	require.Equal(t, lastName, repoUser.LastName)
+	require.Equal(t, bcryptPassword, repoUser.Password)
+	require.WithinDuration(t, created, repoUser.Created, time.Duration(5*time.Second))
+	require.Equal(t, RoleAdmin, repoUser.Role)
+	require.True(t, repoUser.ID > 0)
+
+	t.Logf("Got by id user: %v", repoUser)
 
 	err = repo.DeleteUser(repoUser.ID)
 	require.NoError(t, err)
