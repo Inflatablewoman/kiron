@@ -162,12 +162,12 @@ func login(u *url.URL, h http.Header, request *loginRequest, context *BasicConte
 
 // RestUser ...
 type RestUser struct {
-	ID           int
-	EmailAddress string
-	FirstName    string
-	LastName     string
-	Created      time.Time
-	Role         role
+	ID           int       `json:"id"`
+	EmailAddress string    `json:"email"`
+	FirstName    string    `json:"name"`
+	LastName     string    `json:"lastname"`
+	Created      time.Time `json:"created"`
+	Role         role      `json:"role"`
 }
 
 type createUserRequest struct {

@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCreateUser(t *testing.T) {
+func TestCreateAndLoginUser(t *testing.T) {
 
 	host := os.Getenv("KIRON_HOST")
 	if host == "" {
@@ -26,7 +26,7 @@ func TestCreateUser(t *testing.T) {
 
 	curURL := fmt.Sprintf("http://%s:%s/api/v1/users", host, port)
 
-	emailAddress := "steve@bob.com"
+	emailAddress := fmt.Sprintf("test_%s@%s.com", GetRandomString(5, "") GetRandomString(5, ""))
 	firstName := "bob"
 	lastName := "bobo"
 	password := "bobtown"
@@ -61,4 +61,9 @@ func TestCreateUser(t *testing.T) {
 	require.Equal(t, emailAddress, repoUser.EmailAddress)
 	require.Equal(t, firstName, repoUser.FirstName)
 	require.Equal(t, lastName, repoUser.LastName)
+
+	lr := loginRequest{EmailAddress: emailAddress, Password: password}
+
+	t.Logf("Logging in user: %v", cur)
+
 }
