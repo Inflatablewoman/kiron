@@ -566,7 +566,7 @@ func (r postgresRepository) SetUser(user *User) error {
 
 func (r postgresRepository) UpdateUser(user *User) error {
 
-	stmt, err := r.db.Prepare("UPDATE users SET (email=$1, name=$2, lastname=$3, password=$4, created_at=$5, role_id=$6) WHERE id=$7")
+	stmt, err := r.db.Prepare("UPDATE users SET email=$1, name=$2, lastname=$3, password=$4, created_at=$5, role_id=$6 WHERE id=$7")
 	if err != nil {
 		return err
 	}
