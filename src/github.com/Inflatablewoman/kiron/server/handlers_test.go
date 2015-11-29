@@ -152,6 +152,72 @@ func TestCreateAndLoginUser(t *testing.T) {
 	require.Len(t, loginResp.Token, 16)
 	require.Equal(t, loginResp.TokenExpiry, 3600)
 
+	// Create application
+	// test Application functions
+	created = time.Now().UTC()
+
+	createAppReq := createApplicationRequest{
+		Birthday:              created,
+		PhoneNumber:           "555",
+		Nationality:           "marsian",
+		Country:               "for old men",
+		City:                  "atlantis",
+		Zip:                   "666",
+		Address:               "suck it",
+		AddressExtra:          "of yo business",
+		FirstPageOfSurveyData: "I use a GameBoy",
+		Gender:                "female",
+		EducationLevel:        2,
+	}
+
+	t.Logf("Adding user: %v", createAppReq)
+
+	requestBytes, err = json.Marshal(createAppReq)
+	require.NoError(t, err)
+
+	cAppURL := fmt.Sprintf("http://%s:%s/api/v1/users/%v/application", host, port, repoUser.ID)
+
+	request, err = http.NewRequest("POST", cAppURL, bytes.NewBuffer(requestBytes))
+	require.NoError(t, err)
+
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Authorization", "Bearer "+loginResp.Token)
+
+	response, err = client.Do(request)
+	require.NoError(t, err)
+
+	require.Equal(t, http.StatusOK, response.StatusCode)
+
+	body, err = ioutil.ReadAll(response.Body)
+	require.NoError(t, err)
+
+	var restApplication RestApplication
+	err = json.Unmarshal(body, &restApplication)
+	require.NoError(t, err)
+
+	require.NotNil(t, restApplication)
+	require.Equal(t, repoUser.ID, restApplication.UserID)
+
+	// Upload
+	/*randomContent := GetRandomString(50, "test")
+
+
+	// upload url
+	uploadURL :=
+
+	request, err = http.NewRequest("POST", curURL, bytes.NewBuffer([]byte(randomContent)))
+	require.NoError(t, err)
+
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Authorization", "Bearer "+loginResp.Token)
+
+	response, err = client.Do(request)
+	require.NoError(t, err)
+
+	require.Equal(t, http.StatusOK, response.StatusCode)
+
+	// Download
+
 	lurURL = fmt.Sprintf("http://%s:%s/api/v1/logout", host, port)
 
 	er := emptyRequest{}
@@ -167,6 +233,6 @@ func TestCreateAndLoginUser(t *testing.T) {
 	response, err = client.Do(request)
 	require.NoError(t, err)
 
-	require.Equal(t, http.StatusOK, response.StatusCode)
+	require.Equal(t, http.StatusOK, response.StatusCode)*/
 
 }

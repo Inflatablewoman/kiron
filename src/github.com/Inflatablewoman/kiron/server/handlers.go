@@ -95,7 +95,7 @@ func RegisterHTTPHandlers(mux *tigertonic.TrieServeMux) {
 	mux.Handle("POST", "/api/v1/logout", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(logout)), AuthContext{}))
 
 	// Create user
-	mux.Handle("POST", "/api/v1/users", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(createUser)), AuthContext{}))
+	mux.Handle("POST", "/api/v1/users", tigertonic.WithContext(tigertonic.If(getBasicContext, tigertonic.Marshaled(createUser)), BasicContext{}))
 
 	// Get users
 	mux.Handle("GET", "/api/v1/users", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(getUsers)), AuthContext{}))
@@ -113,7 +113,7 @@ func RegisterHTTPHandlers(mux *tigertonic.TrieServeMux) {
 	mux.Handle("POST", "/api/v1/users/{userID}/application", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(createApplication)), AuthContext{}))
 
 	// Get documents
-	mux.Handle("GET", "/api/v1/users/{userID}/application/{applicationID}/documents", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(getDocuments)), AuthContext{}))
+	mux.Handle("GET", "/api/v1/users/{userID}/application/{applicationID}/documents", NewFileDownloadHandler())
 
 	// Create documents
 	mux.Handle("PUT", "/api/v1/users/{userID}/application/{applicationID}/documents", NewRawUploadHandler())
@@ -220,7 +220,7 @@ type createUserRequest struct {
 }
 
 // createUser will create a user
-func createUser(u *url.URL, h http.Header, request *createUserRequest, context *AuthContext) (int, http.Header, *RestUser, error) {
+func createUser(u *url.URL, h http.Header, request *createUserRequest, context *BasicContext) (int, http.Header, *RestUser, error) {
 	var err error
 	defer CatchPanic(&err, "createUser")
 
