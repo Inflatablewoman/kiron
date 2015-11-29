@@ -29,7 +29,7 @@ type DataRepository interface {
 	DeleteComment(commentID int) error
 
 	GetUsers() ([]User, error)
-	GetUser(userID string) (*User, error)
+	GetUser(userID int) (*User, error)
 	GetUserByEmail(emailAddress string) (*User, error)
 	DeleteUser(userID int) error
 	SetUser(*User) error

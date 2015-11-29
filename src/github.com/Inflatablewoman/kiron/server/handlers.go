@@ -30,15 +30,23 @@ func getContext(r *http.Request) (http.Header, error) {
 	tigertonic.Context(r).(*AuthContext).UserAgent = r.UserAgent()
 	tigertonic.Context(r).(*AuthContext).RemoteAddr = RequestAddr(r)
 
-	// TODO :  Do some basic auth
+	tokenValue := GetBearerAuthFromHeader(r.Header)
 
-	auth := r.Header.Get("Authorization")
-	tokenValue := strings.Replace(auth, "Bearer ", "", 1)
-
+	// Check token is valid
 	token, err := repository.GetToken(tokenValue)
+	if err != nil {
+		log.Printf("Error getting token: %v", err)
+		return nil, tigertonic.Unauthorized{Err: errors.New("Access denied")}
+	}
 
+	// Get user
 	user, err := repository.GetUser(token.UserID)
+	if err != nil {
+		log.Printf("Error getting user: %v", err)
+		return nil, tigertonic.Unauthorized{Err: errors.New("Access denied")}
+	}
 
+	// All good.  Add user to context
 	tigertonic.Context(r).(*AuthContext).User = user
 
 	return nil, nil
@@ -176,7 +184,7 @@ func getUser(u *url.URL, h http.Header, _ interface{}) (int, http.Header, *User,
 
 	log.Println("getUser Started")
 
-	userID := u.Query().Get("userID")
+	userID, err := strconv.Atoi(u.Query().Get("userID"))
 
 	user, err := repository.GetUser(userID)
 
@@ -439,4 +447,18 @@ func RequestAddr(r *http.Request) string {
 	// Get the IP of the request
 	ip, _, _ := net.SplitHostPort(r.RemoteAddr)
 	return ip
+}
+
+// GetBearerAuthFromHeader returns "Bearer" token from request.
+func GetBearerAuthFromHeader(h http.Header) string {
+	authHeader := h.Get("Authorization")
+	if authHeader == "" {
+		return ""
+	}
+
+	s := strings.SplitN(authHeader, " ", 2)
+	if len(s) != 2 || s[0] != "Bearer" {
+		return ""
+	}
+	return s[1]
 }
