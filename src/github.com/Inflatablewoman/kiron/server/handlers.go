@@ -261,6 +261,11 @@ func getApplications(u *url.URL, h http.Header, _ interface{}, context *AuthCont
 
 	log.Println("getApplications Started")
 
+	// Logged in applicant is trying to access a list of applications
+	if context.User.Role == RoleApplication {
+		return http.StatusUnauthorized, nil, nil, errors.New("Access denied")
+	}
+
 	applications, err := repository.GetApplications()
 
 	if err != nil {
@@ -271,6 +276,11 @@ func getApplications(u *url.URL, h http.Header, _ interface{}, context *AuthCont
 
 	for _, application := range applications {
 		restApplication := application.ToRestApplication()
+
+		if context.User.Role == RoleLimitedHelper {
+			trimForLimitedHelper(restApplication)
+		}
+
 		restApplications = append(restApplications, restApplication)
 	}
 
@@ -278,7 +288,7 @@ func getApplications(u *url.URL, h http.Header, _ interface{}, context *AuthCont
 	return http.StatusOK, nil, restApplications, nil
 }
 
-// getApplication will get a list of applications
+// getApplication will get an application
 func getApplication(u *url.URL, h http.Header, _ interface{}, context *AuthContext) (int, http.Header, *RestApplication, error) {
 	var err error
 	defer CatchPanic(&err, "getApplication")
@@ -287,14 +297,25 @@ func getApplication(u *url.URL, h http.Header, _ interface{}, context *AuthConte
 
 	userID, err := strconv.Atoi(u.Query().Get("userID"))
 
+	// Logged in applicant is trying to view another user's application
+	if context.User.Role == RoleApplication && context.User.ID != userID {
+		return http.StatusUnauthorized, nil, nil, errors.New("Access denied")
+	}
+
 	application, err := repository.GetApplicationOf(userID)
 
 	if err != nil {
 		return http.StatusInternalServerError, nil, nil, nil
 	}
 
+	restApplication := application.ToRestApplication()
+
+	if context.User.Role == RoleLimitedHelper {
+		trimForLimitedHelper(restApplication)
+	}
+
 	// All good!
-	return http.StatusOK, nil, application.ToRestApplication(), nil
+	return http.StatusOK, nil, restApplication, nil
 }
 
 // RestApplication ...
@@ -317,6 +338,21 @@ type RestApplication struct {
 	Status                string    `json:"status"`
 	Created               time.Time `json:"created_at"`
 	Edited                time.Time `json:"edited_at"`
+}
+
+// trimForLimitedHelper trims some fields so that limited helper cannot view them
+func trimForLimitedHelper(application *RestApplication) *RestApplication {
+	application.PhoneNumber = ""
+	application.Nationality = ""
+	application.Address = ""
+	application.AddressExtra = ""
+	application.Zip = ""
+	application.City = ""
+	application.Country = ""
+	application.FirstPageOfSurveyData = ""
+	application.Gender = ""
+	application.EducationLevel = 0
+	return application
 }
 
 type createApplicationRequest struct {
