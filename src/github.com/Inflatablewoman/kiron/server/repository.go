@@ -45,7 +45,7 @@ type DataRepository interface {
 	GetToken(tokenValue string) (*Token, error)
 	SetToken(token *Token) error
 	DelToken(tokenValue string) error
-	DelExpiredTokens()
+	DelExpiredTokens() error
 }
 
 // Roles ...

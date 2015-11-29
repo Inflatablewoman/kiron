@@ -686,6 +686,6 @@ func (r postgresRepository) DelToken(tokenValue string) error {
 	return nil
 }
 
-func (r postgresRepository) DelExpiredTokens() {
-	return
+func (r postgresRepository) DelExpiredTokens() error {
+	return nil
 }

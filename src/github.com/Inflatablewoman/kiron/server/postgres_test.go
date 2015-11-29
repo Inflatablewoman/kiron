@@ -135,3 +135,50 @@ func TestPostgresApplications(t *testing.T) {
 
 	t.Log("Test Application deleted")
 }
+
+func TestPostgresTokens(t *testing.T) {
+	// Connect
+	repo, err := getPostgresDB()
+	require.NoError(t, err)
+
+	expiry := time.Now().UTC().Add(-time.Duration(2 * time.Hour))
+
+	token := Token{UserID: 1, Value: "Myawesometoken", Expires: expiry}
+
+	err = repo.SetToken(&token)
+	require.NoError(t, err)
+
+	t.Logf("Set token: %v", token)
+
+	repoToken, err := repo.GetToken(token.Value)
+	require.NoError(t, err)
+
+	require.WithinDuration(t, expiry, repoToken.Expires, time.Duration(5*time.Second))
+	require.Equal(t, "Myawesometoken", repoToken.Value)
+	require.Equal(t, 1, repoToken.UserID)
+
+	t.Logf("Got Token: %v", repoToken)
+
+	err = repo.DelToken(token.Value)
+	require.NoError(t, err)
+
+	repoToken, err = repo.GetToken(token.Value)
+	// It should have been deleted
+	require.Nil(t, repoToken)
+
+	t.Log("Test Token deleted")
+
+	// Expired already
+	expiry = time.Now().UTC().Add(-time.Duration(2 * time.Hour))
+	token = Token{UserID: 1, Value: "Myawesometoken", Expires: expiry}
+
+	err = repo.SetToken(&token)
+	require.NoError(t, err)
+
+	err = repo.DelExpiredTokens()
+	require.NoError(t, err)
+
+	repoToken, err = repo.GetToken(token.Value)
+	// It should have been deleted as it is an expired token
+	require.Nil(t, repoToken)
+}
