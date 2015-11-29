@@ -51,24 +51,24 @@ func (r postgresRepository) GetApplicationsByStatus(status string) ([]*Applicati
 	}
 
 	var (
-		id int
-		birthday time.Time
-		phoneNumber string
-		nationality string
-		country string
-		city string
-		zip string
-		address string
-		addressExtra string
+		id                    int
+		birthday              time.Time
+		phoneNumber           string
+		nationality           string
+		country               string
+		city                  string
+		zip                   string
+		address               string
+		addressExtra          string
 		firstPageOfSurveyData string
-		gender string
-		studyProgram int
-		userID int
-		educationLevel int
-		blockExpires time.Time
-		created time.Time
-		edited time.Time
-		applications []*Application
+		gender                string
+		studyProgram          int
+		userID                int
+		educationLevel        int
+		blockExpires          time.Time
+		created               time.Time
+		edited                time.Time
+		applications          []*Application
 	)
 
 	defer rows.Close()
@@ -78,24 +78,24 @@ func (r postgresRepository) GetApplicationsByStatus(status string) ([]*Applicati
 			return nil, err
 		}
 		log.Println(id, birthday, phoneNumber, nationality, country, city, zip, address, addressExtra, firstPageOfSurveyData, gender, studyProgram, userID, educationLevel, status, blockExpires, created, edited)
-			application := Application{
-				ID: id,
-				Birthday: birthday,
-				PhoneNumber: phoneNumber,
-				Nationality: nationality,
-				Country: country,
-				City: city,
-				Zip: zip,
-				Address: address,
-				AddressExtra: addressExtra,
-				FirstPageOfSurveyData: firstPageOfSurveyData,
-				Gender: gender,
-				UserID: userID,
-				EducationLevel: educationLevel,
-				Status: status,
-				BlockExpires: blockExpires,
-				Created: created,
-				Edited: edited}
+		application := Application{
+			ID:                    id,
+			Birthday:              birthday,
+			PhoneNumber:           phoneNumber,
+			Nationality:           nationality,
+			Country:               country,
+			City:                  city,
+			Zip:                   zip,
+			Address:               address,
+			AddressExtra:          addressExtra,
+			FirstPageOfSurveyData: firstPageOfSurveyData,
+			Gender:                gender,
+			UserID:                userID,
+			EducationLevel:        educationLevel,
+			Status:                status,
+			BlockExpires:          blockExpires,
+			Created:               created,
+			Edited:                edited}
 
 		applications = append(applications, &application)
 	}
@@ -120,24 +120,24 @@ func (r postgresRepository) GetApplication(applicationID int) (*Application, err
 	}
 
 	var (
-		id int
-		birthday time.Time
-		phoneNumber string
-		nationality string
-		country string
-		city string
-		zip string
-		address string
-		addressExtra string
+		id                    int
+		birthday              time.Time
+		phoneNumber           string
+		nationality           string
+		country               string
+		city                  string
+		zip                   string
+		address               string
+		addressExtra          string
 		firstPageOfSurveyData string
-		gender string
-		studyProgram int
-		userID int
-		educationLevel int
-		blockExpires time.Time
-		status string
-		created time.Time
-		edited time.Time
+		gender                string
+		studyProgram          int
+		userID                int
+		educationLevel        int
+		blockExpires          time.Time
+		status                string
+		created               time.Time
+		edited                time.Time
 	)
 
 	defer rows.Close()
@@ -147,27 +147,27 @@ func (r postgresRepository) GetApplication(applicationID int) (*Application, err
 			return nil, err
 		}
 		log.Println(id, birthday, phoneNumber, nationality, country, city, zip, address, addressExtra, firstPageOfSurveyData, gender, studyProgram, userID, educationLevel, status, blockExpires, created, edited)
-			
+
 	}
 
 	application := Application{
-		ID: id,
-		Birthday: birthday,
-		PhoneNumber: phoneNumber,
-		Nationality: nationality,
-		Country: country,
-		City: city,
-		Zip: zip,
-		Address: address,
-		AddressExtra: addressExtra,
+		ID:                    id,
+		Birthday:              birthday,
+		PhoneNumber:           phoneNumber,
+		Nationality:           nationality,
+		Country:               country,
+		City:                  city,
+		Zip:                   zip,
+		Address:               address,
+		AddressExtra:          addressExtra,
 		FirstPageOfSurveyData: firstPageOfSurveyData,
-		Gender: gender,
-		UserID: userID,
-		EducationLevel: educationLevel,
-		Status: status,
-		BlockExpires: blockExpires,
-		Created: created,
-		Edited: edited}
+		Gender:                gender,
+		UserID:                userID,
+		EducationLevel:        educationLevel,
+		Status:                status,
+		BlockExpires:          blockExpires,
+		Created:               created,
+		Edited:                edited}
 
 	if err = rows.Err(); err != nil {
 		return nil, err
@@ -315,7 +315,7 @@ func (r postgresRepository) UpdateApplication(application *Application) error {
 
 // we actually don't delete an application. Still, we need this function for Data Protection Law
 func (r postgresRepository) DeleteApplication(applicationID int) error {
-		stmt, err := r.db.Prepare("DELETE FROM applications WHERE id=$1")
+	stmt, err := r.db.Prepare("DELETE FROM applications WHERE id=$1")
 	if err != nil {
 		return err
 	}
@@ -406,6 +406,10 @@ func (r postgresRepository) GetComment(commentID int) (*Comment, error) {
 	comment := Comment{ID: commentID, Created: createdAt, ApplicationID: applicationID, UserID: userID, Contents: contents}
 
 	return &comment, nil
+}
+
+func (r postgresRepository) SetComment(comment *Comment) error {
+	return nil
 }
 
 func (r postgresRepository) DeleteComment(commentID int) error {

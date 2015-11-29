@@ -259,21 +259,37 @@ func getComments(u *url.URL, h http.Header, _ interface{}) (int, http.Header, []
 
 	log.Println("getComments Started")
 
-	// TODO Implement functionality
-	//comments := nil
+	applicationID, err := strconv.Atoi(u.Query().Get("applicationID"))
+
+	comments, err := repository.GetComments(applicationID)
+
+	if err != nil {
+		return http.StatusInternalServerError, nil, nil, nil
+	}
 
 	// All good!
-	return http.StatusOK, nil, nil, nil
+	return http.StatusOK, nil, comments, nil
 }
 
-func createComment(u *url.URL, h http.Header, _ interface{}) (int, http.Header, *Comment, error) {
+type createCommentRequest struct {
+	UserID   int    `json:"user_id"`
+	Contents string `json:"contents"`
+}
+
+func createComment(u *url.URL, h http.Header, request createCommentRequest) (int, http.Header, *Comment, error) {
 	var err error
 	defer CatchPanic(&err, "createComment")
 
 	log.Println("createComment Started")
 
-	// TODO Implement functionality
-	//comment := nil
+	applicationID, err := strconv.Atoi(u.Query().Get("applicationID"))
+	comment := Comment{ApplicationID: applicationID, UserID: request.UserID, Contents: request.Contents}
+
+	err = repository.SetComment(&comment)
+
+	if err != nil {
+		return http.StatusInternalServerError, nil, nil, nil
+	}
 
 	// All good!
 	return http.StatusOK, nil, nil, nil
