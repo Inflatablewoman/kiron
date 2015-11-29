@@ -603,17 +603,82 @@ func (r postgresRepository) DeleteUser(userID int) error {
 }
 
 // Documents ...
-func (r postgresRepository) GetDocuments(userID string, applicationID string) ([][]byte, error) {
+func (r postgresRepository) GetDocuments(applicationID int) ([][]byte, error) {
 	return nil, nil
 }
-func (r postgresRepository) StoreDocument(documentID string, data []byte) error {
+
+func (r postgresRepository) StoreDocument(document *Document) error {
+	stmt, err := r.db.Prepare("INSERT INTO documents(application_id, document_type_id, contents) VALUES($1, $2, $3)")
+	if err != nil {
+		return err
+	}
+	res, err := stmt.Exec(document.ApplicationID, document.DocumentTypeID, document.Contents)
+	if err != nil {
+		return err
+	}
+	rowCnt, err := res.RowsAffected()
+	if err != nil {
+		log.Printf("Got error - RowsAffected: %v", err)
+	}
+	log.Printf("affected = %d\n", rowCnt)
+
 	return nil
 }
-func (r postgresRepository) GetDocument(documentID string) ([]byte, error) {
-	return nil, nil
+
+func (r postgresRepository) GetDocument(documentID int) (*Document, error) {
+	log.Printf("Going to get document by ID:  %v", documentID)
+	stmt, err := r.db.Prepare("SELECT application_id, document_type_id, contents FROM documents WHERE id=$1")
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := stmt.Query(documentID)
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		applicationID  int
+		docTypeID int
+		userID int
+		contents []byte
+	)
+
+	defer rows.Close()
+	for rows.Next() {
+		err := rows.Scan(&applicationID, &docTypeID, &userID, &contents)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	document := Document{ID: documentID, ApplicationID: applicationID, DocumentTypeID: docTypeID, Contents: contents}
+
+	return &document, nil
 }
-func (r postgresRepository) DeleteDocument(documentID string) error {
-	return nil
+
+func (r postgresRepository) DeleteDocument(documentID int) error {
+	log.Printf("Going to delete document with id = %d", documentID)
+	stmt, err := r.db.Prepare("DELETE FROM documents WHERE id = $1")
+	if err != nil {
+		return err
+	}
+	
+	res, err := stmt.Exec(documentID)
+	if err != nil {
+		return err
+	}
+	rowCnt, err := res.RowsAffected()
+	if err != nil {
+		log.Printf("Got error - RowsAffected: %v", err)
+	}
+	log.Printf("affected = %d\n", rowCnt)
+
+	return nil	
 }
 
 func (r postgresRepository) GetToken(tokenValue string) (*Token, error) {

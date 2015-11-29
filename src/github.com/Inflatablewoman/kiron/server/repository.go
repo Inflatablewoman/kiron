@@ -37,10 +37,10 @@ type DataRepository interface {
 	UpdateUser(*User) error
 	DeleteUser(userID int) error
 
-	GetDocuments(userID string, applicationID string) ([][]byte, error)
-	StoreDocument(documentID string, data []byte) error
-	GetDocument(documentID string) ([]byte, error)
-	DeleteDocument(documentID string) error
+	GetDocuments(applicationID int) ([][]byte, error)
+	StoreDocument(document *Document) error
+	GetDocument(documentID int) (*Document, error)
+	DeleteDocument(documentID int) error
 
 	GetToken(tokenValue string) (*Token, error)
 	SetToken(token *Token) error
@@ -160,8 +160,7 @@ type Document struct {
 	ID             int
 	ApplicationID  int
 	DocumentTypeID int
-	UserID         int
-	Contents       string
+	Contents       []byte
 }
 
 // LoginResponse ...
