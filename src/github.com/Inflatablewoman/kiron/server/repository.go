@@ -32,6 +32,7 @@ type DataRepository interface {
 	DeleteUser(userID int) error
 	SetUser(*User) error
 
+	GetDocuments(userID string, applicationID string) ([][]byte, error)
 	StoreDocument(documentID string, data []byte) error
 	GetDocument(documentID string) ([]byte, error)
 	DeleteDocument(documentID string) error

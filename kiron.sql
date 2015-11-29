@@ -12,13 +12,6 @@ create type status as enum (
   'accepted'
 );
 
-drop table if exists auth_tokens cascade;
-create table auth_tokens (
-  user_id integer not null,
-  token text not null,
-  expires timestamp not null
-);
-
 drop table if exists education_levels cascade;
 create table education_levels (
   id serial primary key,
@@ -60,6 +53,13 @@ create table users (
   ),
   created_at timestamp not null,
   role_id integer references roles not null
+);
+
+drop table if exists auth_tokens cascade;
+create table auth_tokens (
+  user_id integer references users not null,
+  token text not null,
+  expires timestamp not null
 );
 
 drop table if exists applications cascade;

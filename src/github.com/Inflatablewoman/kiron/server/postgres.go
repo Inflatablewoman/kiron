@@ -383,6 +383,9 @@ func (r postgresRepository) SetUser(user *User) error {
 	return nil
 }
 
+func (r postgresRepository) GetDocuments(userID string, applicationID string) ([][]byte, error) {
+	return nil, nil
+}
 func (r postgresRepository) StoreDocument(documentID string, data []byte) error {
 	return nil
 }
