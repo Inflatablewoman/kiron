@@ -279,7 +279,7 @@ func (r postgresRepository) SetApplication(application *Application) error {
 }
 
 func (r postgresRepository) UpdateApplication(application *Application) error {
-	stmt, err := r.db.Prepare("UPDATE applications SET (birthday=$1, phone=$2, nationality=$3, country=$4, city=$5, zip=$6, address=$7, address_extra=$8, first_page_of_survey_data=$9, gender=$10, study_program=$11, user_id=$12, education_level_id=$12, status=$13, blocked_until=$14, created_at=$15, edited_at=$16) WHERE id=$17")
+	stmt, err := r.db.Prepare("UPDATE applications SET birthday=$1, phone=$2, nationality=$3, country=$4, city=$5, zip=$6, address=$7, address_extra=$8, first_page_of_survey_data=$9, gender=$10, study_program=$11, user_id=$12, education_level_id=$12, status=$13, blocked_until=$14, created_at=$15, edited_at=$16 WHERE id=$17")
 	if err != nil {
 		return err
 	}
@@ -427,7 +427,7 @@ func (r postgresRepository) SetComment(comment *Comment) error {
 }
 
 func (r postgresRepository) UpdateComment(comment *Comment) error {
-	stmt, err := r.db.Prepare("UPDATE comments SET (created_at=$1, application_id=$2, user_id=$3, contents=$4) WHERE id=$5")
+	stmt, err := r.db.Prepare("UPDATE comments SET created_at=$1, application_id=$2, user_id=$3, contents=$4 WHERE id=$5")
 	if err != nil {
 		return err
 	}
