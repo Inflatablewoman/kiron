@@ -20,6 +20,7 @@ type DataRepository interface {
 	GetApplication(applicationID int) (*Application, error)
 	GetApplicationOf(userID int) (*Application, error)
 	SetApplication(application *Application) error
+	UpdateApplication(application *Application) error
 	DeleteApplication(applicationID int) error
 
 	GetComments(applicationID int) ([]*Comment, error)
