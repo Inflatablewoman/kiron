@@ -409,6 +409,38 @@ func (r postgresRepository) GetComment(commentID int) (*Comment, error) {
 }
 
 func (r postgresRepository) SetComment(comment *Comment) error {
+	stmt, err := r.db.Prepare("INSERT INTO comments(created_at, application_id, user_id, contents) VALUES($1, $2, $3, $4)")
+	if err != nil {
+		return err
+	}
+	res, err := stmt.Exec(comment.Created, comment.ApplicationID, comment.UserID, user.Contents)
+	if err != nil {
+		return err
+	}
+	rowCnt, err := res.RowsAffected()
+	if err != nil {
+		log.Printf("Got error - RowsAffected: %v", err)
+	}
+	log.Printf("affected = %d\n", rowCnt)
+	
+	return nil
+}
+
+func (r postgresRepository) UpdateComment(comment *Comment) error {
+	stmt, err := r.db.Prepare("UPDATE comments SET (created_at=$1, application_id=$2, user_id=$3, contents=$4) WHERE id=$5")
+	if err != nil {
+		return err
+	}
+	res, err := stmt.Exec(comment.Created, comment.ApplicationID, comment.UserID, comment.Contents, comment.ID)
+	if err != nil {
+		return err
+	}
+	rowCnt, err := res.RowsAffected()
+	if err != nil {
+		log.Printf("Got error - RowsAffected: %v", err)
+	}
+	log.Printf("affected = %d\n", rowCnt)
+	
 	return nil
 }
 
