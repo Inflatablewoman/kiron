@@ -15,6 +15,8 @@ import (
 
 var client = http.DefaultClient
 
+type emptyRequest struct{}
+
 func TestCreateAndLoginUser(t *testing.T) {
 
 	host := os.Getenv("KIRON_HOST")
@@ -151,5 +153,21 @@ func TestCreateAndLoginUser(t *testing.T) {
 	require.NotEmpty(t, loginResp.Token)
 	require.Len(t, loginResp.Token, 16)
 	require.Equal(t, loginResp.TokenExpiry, 3600)
+
+	lurURL = fmt.Sprintf("http://%s:%s/api/v1/logout", host, port)
+
+	er := emptyRequest{}
+	requestBytes, err = json.Marshal(er)
+	require.NoError(t, err)
+
+	request, err = http.NewRequest("POST", lurURL, bytes.NewBuffer(requestBytes))
+	require.NoError(t, err)
+
+	request.Header.Set("Content-Type", "application/json")
+
+	response, err = client.Do(request)
+	require.NoError(t, err)
+
+	require.Equal(t, http.StatusOK, response.StatusCode)
 
 }

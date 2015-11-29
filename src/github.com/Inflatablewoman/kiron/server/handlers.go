@@ -22,6 +22,7 @@ type AuthContext struct {
 	UserAgent  string
 	RemoteAddr string
 	User       *User
+	TokenValue string
 }
 
 // getContext is used check the Auth of a user
@@ -31,6 +32,8 @@ func getContext(r *http.Request) (http.Header, error) {
 	tigertonic.Context(r).(*AuthContext).RemoteAddr = RequestAddr(r)
 
 	tokenValue := GetBearerAuthFromHeader(r.Header)
+
+	tigertonic.Context(r).(*AuthContext).TokenValue = tokenValue
 
 	if tokenValue == "" {
 		log.Println("No token passed")
@@ -87,6 +90,8 @@ func RegisterHTTPHandlers(mux *tigertonic.TrieServeMux) {
 
 	// Create user
 	mux.Handle("POST", "/api/v1/login", tigertonic.WithContext(tigertonic.If(getBasicContext, tigertonic.Marshaled(login)), BasicContext{}))
+
+	mux.Handle("POST", "/api/va/logout", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(logout)), AuthContext{}))
 
 	// Create user
 	mux.Handle("POST", "/api/v1/users", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(createUser)), AuthContext{}))
@@ -180,6 +185,20 @@ func login(u *url.URL, h http.Header, request *loginRequest, context *BasicConte
 	return http.StatusOK, nil, &lResp, nil
 }
 
+// logout will logout a session
+func logout(u *url.URL, h http.Header, _ interface{}, context *AuthContext) (int, http.Header, interface{}, error) {
+	var err error
+	defer CatchPanic(&err, "logout")
+
+	err = repository.DelToken(context.TokenValue)
+	if err != nil {
+		log.Printf("Error deleting token: %v", err)
+		return http.StatusInternalServerError, nil, nil, errors.New("Unable to delete token")
+	}
+
+	return http.StatusOK, nil, nil, nil
+}
+
 // RestUser ...
 type RestUser struct {
 	ID           int       `json:"id"`
@@ -251,7 +270,7 @@ func getUsers(u *url.URL, h http.Header, _ interface{}, context *AuthContext) (i
 
 	log.Println("getUsers Started")
 
-	if context.User.Role != RoleAdmin || context.User.Role != RoleSubAdmin {
+	if context.User.Role != RoleAdmin && context.User.Role != RoleSubAdmin {
 		return http.StatusUnauthorized, nil, nil, errors.New("Access denied")
 	}
 
