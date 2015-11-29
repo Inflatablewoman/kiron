@@ -545,25 +545,6 @@ func (r postgresRepository) GetUserByEmail(emailAddress string) (*User, error) {
 	return &user, nil
 }
 
-func (r postgresRepository) DeleteUser(userID int) error {
-	stmt, err := r.db.Prepare("DELETE FROM users WHERE id = $1")
-	if err != nil {
-		return err
-	}
-	res, err := stmt.Exec(userID)
-	if err != nil {
-		return err
-	}
-	rowCnt, err := res.RowsAffected()
-	if err != nil {
-		log.Printf("Got error - LastInsertId: %v", err)
-	}
-
-	log.Printf("Rows affected = %d\n", rowCnt)
-
-	return nil
-}
-
 func (r postgresRepository) SetUser(user *User) error {
 
 	stmt, err := r.db.Prepare("INSERT INTO users(email, name, lastname, password, created_at, role_id) VALUES($1, $2, $3, $4, $5, $6)")
@@ -583,6 +564,45 @@ func (r postgresRepository) SetUser(user *User) error {
 	return nil
 }
 
+func (r postgresRepository) UpdateUser(user *User) error {
+
+	stmt, err := r.db.Prepare("UPDATE users SET (email=$1, name=$2, lastname=$3, password=$4, created_at=$5, role_id=$6) WHERE id=$7")
+	if err != nil {
+		return err
+	}
+	res, err := stmt.Exec(user.EmailAddress, user.FirstName, user.LastName, user.Password, user.Created, user.Role.Value(), user.ID)
+	if err != nil {
+		return err
+	}
+	rowCnt, err := res.RowsAffected()
+	if err != nil {
+		log.Printf("Got error - RowsAffected: %v", err)
+	}
+	log.Printf("affected = %d\n", rowCnt)
+
+	return nil
+}
+
+func (r postgresRepository) DeleteUser(userID int) error {
+	stmt, err := r.db.Prepare("DELETE FROM users WHERE id = $1")
+	if err != nil {
+		return err
+	}
+	res, err := stmt.Exec(userID)
+	if err != nil {
+		return err
+	}
+	rowCnt, err := res.RowsAffected()
+	if err != nil {
+		log.Printf("Got error - LastInsertId: %v", err)
+	}
+
+	log.Printf("Rows affected = %d\n", rowCnt)
+
+	return nil
+}
+
+// Documents ...
 func (r postgresRepository) GetDocuments(userID string, applicationID string) ([][]byte, error) {
 	return nil, nil
 }
