@@ -71,6 +71,7 @@ create table applications (
   country text not null,  -- address
   city text not null,     -- address
   zip text not null,      -- address
+  address text,
   address_extra text,
   first_page_of_survey_data text,
   gender gender not null,

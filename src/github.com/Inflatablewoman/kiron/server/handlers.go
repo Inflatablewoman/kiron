@@ -150,8 +150,8 @@ func getUsers(u *url.URL, h http.Header, _ interface{}) (int, http.Header, []Use
 	return http.StatusOK, nil, users, nil
 }
 
-// getApplications will get a list of applications
-func getApplications(u *url.URL, h http.Header, _ interface{}) (int, http.Header, []Application, error) {
+// getApplications will get a list of all (???) applications
+func getApplications(u *url.URL, h http.Header, _ interface{}) (int, http.Header, []*Application, error) {
 	var err error
 	defer CatchPanic(&err, "getApplications")
 
