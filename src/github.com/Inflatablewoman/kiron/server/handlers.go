@@ -555,15 +555,30 @@ func (handler FileDownloadHandler) ServeHTTP(w http.ResponseWriter, r *http.Requ
 	var err error
 	defer CatchPanic(&err, "FileDownloadHandler")
 
-	userID := r.URL.Query().Get("userID")
-	documentID := r.URL.Query().Get("documentID")
+	_, err = getContext(r)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
 
-	log.Printf("Download User [%v] Document [%v]", userID, documentID)
+	documentID, err := strconv.Atoi(r.URL.Query().Get("documentID"))
+	if err != nil {
+		HandleErrorWithResponse(w, err)
+		return
+	}
+
+	document, err := repository.GetDocument(documentID)
+	if err != nil {
+		HandleErrorWithResponse(w, err)
+		return
+	}
+
+	log.Printf("Download Document [%v]", documentID)
 
 	header := w.Header()
 	header["Content-Type"] = []string{"application/octet-stream"}
+	w.Write(document.Contents)
 
-	// TODO:  Add data to stream
 	log.Println("Download complete")
 }
 
@@ -578,6 +593,7 @@ func checkClose(c io.Closer, err *error) {
 
 // HandleErrorWithResponse ...
 func HandleErrorWithResponse(w http.ResponseWriter, err error) {
+	log.Printf("Got error: %v", err)
 	w.WriteHeader(http.StatusInternalServerError)
 	fmt.Fprintln(w, err)
 	return
