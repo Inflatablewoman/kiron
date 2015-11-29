@@ -2,6 +2,7 @@ package server
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 	"os"
 	"time"
@@ -638,10 +639,10 @@ func (r postgresRepository) GetDocument(documentID int) (*Document, error) {
 	}
 
 	var (
-		applicationID  int
-		docTypeID int
-		userID int
-		contents []byte
+		applicationID int
+		docTypeID     int
+		userID        int
+		contents      []byte
 	)
 
 	defer rows.Close()
@@ -667,7 +668,7 @@ func (r postgresRepository) DeleteDocument(documentID int) error {
 	if err != nil {
 		return err
 	}
-	
+
 	res, err := stmt.Exec(documentID)
 	if err != nil {
 		return err
@@ -678,7 +679,7 @@ func (r postgresRepository) DeleteDocument(documentID int) error {
 	}
 	log.Printf("affected = %d\n", rowCnt)
 
-	return nil	
+	return nil
 }
 
 func (r postgresRepository) GetToken(tokenValue string) (*Token, error) {
@@ -710,6 +711,10 @@ func (r postgresRepository) GetToken(tokenValue string) (*Token, error) {
 		return nil, err
 	}
 
+	if userID == 0 {
+		return nil, errors.New("Not found")
+	}
+
 	token := Token{UserID: userID, Value: tokenValue, Expires: expires}
 
 	return &token, nil
@@ -734,6 +739,8 @@ func (r postgresRepository) SetToken(token *Token) error {
 }
 
 func (r postgresRepository) DelToken(tokenValue string) error {
+	log.Printf("Deleting token: %s", tokenValue)
+
 	stmt, err := r.db.Prepare("DELETE FROM auth_tokens WHERE token = $1")
 	if err != nil {
 		return err
@@ -751,6 +758,6 @@ func (r postgresRepository) DelToken(tokenValue string) error {
 	return nil
 }
 
-func (r postgresRepository) DelExpiredTokens() {
-	return
+func (r postgresRepository) DelExpiredTokens() error {
+	return nil
 }

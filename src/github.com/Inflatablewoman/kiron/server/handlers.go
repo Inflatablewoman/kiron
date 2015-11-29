@@ -88,10 +88,11 @@ func getBasicContext(r *http.Request) (http.Header, error) {
 // RegisterHTTPHandlers registers the http handlers
 func RegisterHTTPHandlers(mux *tigertonic.TrieServeMux) {
 
-	// Create user
+	// Login User
 	mux.Handle("POST", "/api/v1/login", tigertonic.WithContext(tigertonic.If(getBasicContext, tigertonic.Marshaled(login)), BasicContext{}))
 
-	mux.Handle("POST", "/api/va/logout", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(logout)), AuthContext{}))
+	// Logout
+	mux.Handle("POST", "/api/v1/logout", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(logout)), AuthContext{}))
 
 	// Create user
 	mux.Handle("POST", "/api/v1/users", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(createUser)), AuthContext{}))
@@ -115,7 +116,7 @@ func RegisterHTTPHandlers(mux *tigertonic.TrieServeMux) {
 	mux.Handle("GET", "/api/v1/users/{userID}/application/{applicationID}/documents", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(getDocuments)), AuthContext{}))
 
 	// Create documents
-	mux.Handle("POST", "/api/v1/users/{userID}/application/{applicationID}/documents", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(createDocuments)), AuthContext{}))
+	mux.Handle("PUT", "/api/v1/users/{userID}/application/{applicationID}/documents", NewRawUploadHandler())
 
 	// Get comments
 	mux.Handle("GET", "/api/v1/users/{userID}/application/{applicationID}/comments", tigertonic.WithContext(tigertonic.If(getContext, tigertonic.Marshaled(getComments)), AuthContext{}))
@@ -186,9 +187,11 @@ func login(u *url.URL, h http.Header, request *loginRequest, context *BasicConte
 }
 
 // logout will logout a session
-func logout(u *url.URL, h http.Header, _ interface{}, context *AuthContext) (int, http.Header, interface{}, error) {
+func logout(u *url.URL, h http.Header, _ *emptyRequest, context *AuthContext) (int, http.Header, interface{}, error) {
 	var err error
 	defer CatchPanic(&err, "logout")
+
+	log.Printf("Going to logout: %v", context.User.EmailAddress)
 
 	err = repository.DelToken(context.TokenValue)
 	if err != nil {
@@ -552,15 +555,30 @@ func (handler FileDownloadHandler) ServeHTTP(w http.ResponseWriter, r *http.Requ
 	var err error
 	defer CatchPanic(&err, "FileDownloadHandler")
 
-	userID := r.URL.Query().Get("userID")
-	documentID := r.URL.Query().Get("documentID")
+	_, err = getContext(r)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
 
-	log.Printf("Download User [%v] Document [%v]", userID, documentID)
+	documentID, err := strconv.Atoi(r.URL.Query().Get("documentID"))
+	if err != nil {
+		HandleErrorWithResponse(w, err)
+		return
+	}
+
+	document, err := repository.GetDocument(documentID)
+	if err != nil {
+		HandleErrorWithResponse(w, err)
+		return
+	}
+
+	log.Printf("Download Document [%v]", documentID)
 
 	header := w.Header()
 	header["Content-Type"] = []string{"application/octet-stream"}
+	w.Write(document.Contents)
 
-	// TODO:  Add data to stream
 	log.Println("Download complete")
 }
 
@@ -575,6 +593,7 @@ func checkClose(c io.Closer, err *error) {
 
 // HandleErrorWithResponse ...
 func HandleErrorWithResponse(w http.ResponseWriter, err error) {
+	log.Printf("Got error: %v", err)
 	w.WriteHeader(http.StatusInternalServerError)
 	fmt.Fprintln(w, err)
 	return
@@ -613,3 +632,5 @@ func GetBearerAuthFromHeader(h http.Header) string {
 	}
 	return s[1]
 }
+
+type emptyRequest struct{}
