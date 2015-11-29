@@ -120,17 +120,17 @@ func TestPostgresApplications(t *testing.T) {
 	err = repo.SetApplication(&appl)
 	require.NoError(t, err)
 
-	repoAppl, err := repo.GetApplicationOf(1)
+	repoAppl, err := repo.GetApplicationOf(repoUser.ID)
 	require.NoError(t, err)
 
 	t.Logf("Set application: %v", repoAppl)
 
-	require.WithinDuration(t, created, repoAppl.Birthday, time.Duration(5*time.Second))
+	require.WithinDuration(t, created, repoAppl.Birthday, time.Duration(24*time.Hour))
 	require.Equal(t, "555", repoAppl.PhoneNumber)
 	require.Equal(t, "for old men", repoAppl.Country)
 	require.Equal(t, "marsian", repoAppl.Nationality)
 	require.Equal(t, "noone", repoAppl.Address)
-	require.Equal(t, "of your business", repoAppl.AddressExtra)
+	require.Equal(t, "of yo business", repoAppl.AddressExtra)
 	require.Equal(t, "atlantis", repoAppl.City)
 	require.Equal(t, "female", repoAppl.Gender)
 	require.Equal(t, "I use a GameBoy", repoAppl.FirstPageOfSurveyData)

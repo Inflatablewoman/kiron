@@ -41,7 +41,7 @@ func (r postgresRepository) GetApplications() ([]*Application, error) {
 
 func (r postgresRepository) GetApplicationsByStatus(status string) ([]*Application, error) {
 	log.Printf("Going to get all applications for status %s", status)
-	stmt, err := r.db.Prepare("SELECT id, birthday, phone, nationality, country, city, zip, address, address_extra, first_page_of_survey_data, gender, study_program, user_id, education_level_id, status, blocked_until, created_at, edited_at FROM application WHERE status=$1")
+	stmt, err := r.db.Prepare("SELECT id, birthday, phone, nationality, country, city, zip, address, address_extra, first_page_of_survey_data, gender, user_id, education_level_id, status, blocked_until, created_at, edited_at FROM application WHERE status=$1")
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,6 @@ func (r postgresRepository) GetApplicationsByStatus(status string) ([]*Applicati
 		addressExtra          string
 		firstPageOfSurveyData string
 		gender                string
-		studyProgram          int
 		userID                int
 		educationLevel        int
 		blockExpires          time.Time
@@ -74,11 +73,11 @@ func (r postgresRepository) GetApplicationsByStatus(status string) ([]*Applicati
 
 	defer rows.Close()
 	for rows.Next() {
-		err := rows.Scan(&id, &birthday, &phoneNumber, &nationality, &country, &city, &zip, &address, &addressExtra, &firstPageOfSurveyData, &gender, &studyProgram, &userID, &educationLevel, &status, &blockExpires, &created, &edited)
+		err := rows.Scan(&id, &birthday, &phoneNumber, &nationality, &country, &city, &zip, &address, &addressExtra, &firstPageOfSurveyData, &gender, &userID, &educationLevel, &status, &blockExpires, &created, &edited)
 		if err != nil {
 			return nil, err
 		}
-		log.Println(id, birthday, phoneNumber, nationality, country, city, zip, address, addressExtra, firstPageOfSurveyData, gender, studyProgram, userID, educationLevel, status, blockExpires, created, edited)
+		log.Println(id, birthday, phoneNumber, nationality, country, city, zip, address, addressExtra, firstPageOfSurveyData, gender, userID, educationLevel, status, blockExpires, created, edited)
 		application := Application{
 			ID:                    id,
 			Birthday:              birthday,
@@ -110,7 +109,7 @@ func (r postgresRepository) GetApplicationsByStatus(status string) ([]*Applicati
 
 func (r postgresRepository) GetApplication(applicationID int) (*Application, error) {
 	log.Printf("Going to application with id %d", applicationID)
-	stmt, err := r.db.Prepare("SELECT id, birthday, phone, nationality, country, city, zip, address, address_extra, first_page_of_survey_data, gender, study_program, user_id, education_level_id, status, blocked_until, created_at, edited_at FROM application WHERE id=$1")
+	stmt, err := r.db.Prepare("SELECT id, birthday, phone, nationality, country, city, zip, address, address_extra, first_page_of_survey_data, gender, user_id, education_level_id, status, blocked_until, created_at, edited_at FROM application WHERE id=$1")
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +131,6 @@ func (r postgresRepository) GetApplication(applicationID int) (*Application, err
 		addressExtra          string
 		firstPageOfSurveyData string
 		gender                string
-		studyProgram          int
 		userID                int
 		educationLevel        int
 		blockExpires          time.Time
@@ -143,11 +141,11 @@ func (r postgresRepository) GetApplication(applicationID int) (*Application, err
 
 	defer rows.Close()
 	for rows.Next() {
-		err := rows.Scan(&id, &birthday, &phoneNumber, &nationality, &country, &city, &zip, &address, &addressExtra, &firstPageOfSurveyData, &gender, &studyProgram, &userID, &educationLevel, &status, &blockExpires, &created, &edited)
+		err := rows.Scan(&id, &birthday, &phoneNumber, &nationality, &country, &city, &zip, &address, &addressExtra, &firstPageOfSurveyData, &gender, &userID, &educationLevel, &status, &blockExpires, &created, &edited)
 		if err != nil {
 			return nil, err
 		}
-		log.Println(id, birthday, phoneNumber, nationality, country, city, zip, address, addressExtra, firstPageOfSurveyData, gender, studyProgram, userID, educationLevel, status, blockExpires, created, edited)
+		log.Println(id, birthday, phoneNumber, nationality, country, city, zip, address, addressExtra, firstPageOfSurveyData, gender, userID, educationLevel, status, blockExpires, created, edited)
 
 	}
 
@@ -179,7 +177,7 @@ func (r postgresRepository) GetApplication(applicationID int) (*Application, err
 
 func (r postgresRepository) GetApplicationOf(userID int) (*Application, error) {
 	log.Printf("Going to get application for user with id %d", userID)
-	stmt, err := r.db.Prepare("SELECT id, birthday, phone, nationality, country, city, zip, address, address_extra, first_page_of_survey_data, gender, study_program, user_id, education_level_id, status, blocked_until, created_at, edited_at FROM applications WHERE user_id=$1")
+	stmt, err := r.db.Prepare("SELECT id, birthday, phone, nationality, country, city, zip, address, address_extra, first_page_of_survey_data, gender, user_id, education_level_id, status, blocked_until, created_at, edited_at FROM applications WHERE user_id=$1")
 	if err != nil {
 		return nil, err
 	}
@@ -201,7 +199,6 @@ func (r postgresRepository) GetApplicationOf(userID int) (*Application, error) {
 		addressExtra          string
 		firstPageOfSurveyData string
 		gender                string
-		studyProgram          int
 		educationLevel        int
 		blockExpires          time.Time
 		status                string
@@ -211,11 +208,11 @@ func (r postgresRepository) GetApplicationOf(userID int) (*Application, error) {
 
 	defer rows.Close()
 	for rows.Next() {
-		err := rows.Scan(&id, &birthday, &phoneNumber, &nationality, &country, &city, &zip, &address, &addressExtra, &firstPageOfSurveyData, &gender, &studyProgram, &userID, &educationLevel, &status, &blockExpires, &created, &edited)
+		err := rows.Scan(&id, &birthday, &phoneNumber, &nationality, &country, &city, &zip, &address, &addressExtra, &firstPageOfSurveyData, &gender, &userID, &educationLevel, &status, &blockExpires, &created, &edited)
 		if err != nil {
 			return nil, err
 		}
-		log.Println(id, birthday, phoneNumber, nationality, country, city, zip, address, addressExtra, firstPageOfSurveyData, gender, studyProgram, userID, educationLevel, status, blockExpires, created, edited)
+		log.Println(id, birthday, phoneNumber, nationality, country, city, zip, address, addressExtra, firstPageOfSurveyData, gender, userID, educationLevel, status, blockExpires, created, edited)
 
 	}
 
@@ -280,7 +277,7 @@ func (r postgresRepository) SetApplication(application *Application) error {
 }
 
 func (r postgresRepository) UpdateApplication(application *Application) error {
-	stmt, err := r.db.Prepare("UPDATE applications SET birthday=$1, phone=$2, nationality=$3, country=$4, city=$5, zip=$6, address=$7, address_extra=$8, first_page_of_survey_data=$9, gender=$10, study_program=$11, user_id=$12, education_level_id=$12, status=$13, blocked_until=$14, created_at=$15, edited_at=$16 WHERE id=$17")
+	stmt, err := r.db.Prepare("UPDATE applications SET birthday=$1, phone=$2, nationality=$3, country=$4, city=$5, zip=$6, address=$7, address_extra=$8, first_page_of_survey_data=$9, gender=$10, user_id=$11, education_level_id=$12, status=$13, blocked_until=$14, created_at=$15, edited_at=$16 WHERE id=$17")
 	if err != nil {
 		return err
 	}
