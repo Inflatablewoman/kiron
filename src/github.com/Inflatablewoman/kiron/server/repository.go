@@ -30,7 +30,7 @@ type DataRepository interface {
 	DeleteComment(commentID int) error
 
 	GetUsers() ([]User, error)
-	GetUser(userID string) (*User, error)
+	GetUser(userID int) (*User, error)
 	GetUserByEmail(emailAddress string) (*User, error)
 	DeleteUser(userID int) error
 	SetUser(*User) error
@@ -39,6 +39,11 @@ type DataRepository interface {
 	StoreDocument(documentID string, data []byte) error
 	GetDocument(documentID string) ([]byte, error)
 	DeleteDocument(documentID string) error
+
+	GetToken(tokenValue string) (*Token, error)
+	SetToken(token *Token) error
+	DelToken(tokenValue string) error
+	DelExpiredTokens()
 }
 
 // Roles ...
@@ -134,8 +139,8 @@ type Document struct {
 
 // LoginResponse ...
 type LoginResponse struct {
-	Token       int
-	TokenExpory int
+	Token       string
+	TokenExpiry int
 	Result      LoginResult
 }
 
@@ -146,4 +151,11 @@ type LoginResult struct {
 	FirstName    string
 	LastName     string
 	Role         role
+}
+
+// Token ...
+type Token struct {
+	UserID  int
+	Value   string
+	Expires time.Time
 }

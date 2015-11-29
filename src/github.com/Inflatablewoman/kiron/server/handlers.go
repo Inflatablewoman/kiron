@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -10,6 +11,7 @@ import (
 	"net/url"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/rcrowley/go-tigertonic"
@@ -19,6 +21,7 @@ import (
 type AuthContext struct {
 	UserAgent  string
 	RemoteAddr string
+	User       *User
 }
 
 // getContext is used to return UserAgent and Request info from the request
@@ -27,7 +30,24 @@ func getContext(r *http.Request) (http.Header, error) {
 	tigertonic.Context(r).(*AuthContext).UserAgent = r.UserAgent()
 	tigertonic.Context(r).(*AuthContext).RemoteAddr = RequestAddr(r)
 
-	// TODO :  Do some basic auth
+	tokenValue := GetBearerAuthFromHeader(r.Header)
+
+	// Check token is valid
+	token, err := repository.GetToken(tokenValue)
+	if err != nil {
+		log.Printf("Error getting token: %v", err)
+		return nil, tigertonic.Unauthorized{Err: errors.New("Access denied")}
+	}
+
+	// Get user
+	user, err := repository.GetUser(token.UserID)
+	if err != nil {
+		log.Printf("Error getting user: %v", err)
+		return nil, tigertonic.Unauthorized{Err: errors.New("Access denied")}
+	}
+
+	// All good.  Add user to context
+	tigertonic.Context(r).(*AuthContext).User = user
 
 	return nil, nil
 }
@@ -80,10 +100,49 @@ func login(u *url.URL, h http.Header, request *loginRequest, context *AuthContex
 	var err error
 	defer CatchPanic(&err, "login")
 
-	log.Println("login called by: %s %s", context.RemoteAddr, context.UserAgent)
+	log.Printf("login called by: %s %s", context.RemoteAddr, context.UserAgent)
+
+	if request.EmailAddress == "" {
+		return http.StatusBadRequest, nil, nil, errors.New("You must provide an email address")
+	}
+
+	if request.Password == "" {
+		return http.StatusBadRequest, nil, nil, errors.New("You must provide a password")
+	}
+
+	user, err := repository.GetUserByEmail(request.EmailAddress)
+	if err != nil {
+		return http.StatusUnauthorized, nil, nil, errors.New("Invalid password or unknown user")
+	}
+
+	bcryptPass, _ := createHashedPassword(request.Password)
+	if bcryptPass != user.Password {
+		return http.StatusUnauthorized, nil, nil, errors.New("Invalid password or unknown user")
+	}
+
+	tokenValue := GetRandomString(16, "")
+	expires := time.Now().UTC().Add(time.Duration(1 * time.Hour))
+
+	t := Token{UserID: user.ID, Value: tokenValue, Expires: expires}
+
+	// Save token to database
+	err = repository.SetToken(&t)
+	if err != nil {
+		return http.StatusInternalServerError, nil, nil, errors.New("Internal error")
+	}
+
+	expiresSeconds := 3600 // seconds in 1 hour
+	lr := LoginResult{ID: user.ID,
+		EmailAddress: user.EmailAddress,
+		FirstName:    user.FirstName,
+		LastName:     user.LastName,
+		Role:         user.Role}
+	lResp := LoginResponse{Token: tokenValue,
+		TokenExpiry: expiresSeconds,
+		Result:      lr}
 
 	// All good!
-	return http.StatusOK, nil, nil, nil
+	return http.StatusOK, nil, &lResp, nil
 }
 
 type createUserRequest struct {
@@ -98,7 +157,11 @@ func createUser(u *url.URL, h http.Header, request *createUserRequest, context *
 	var err error
 	defer CatchPanic(&err, "createUser")
 
-	log.Println("createUser called by: %s %s", context.RemoteAddr, context.UserAgent)
+	log.Printf("createUser called by: %s %s", context.RemoteAddr, context.UserAgent)
+
+	if context.User.Role != RoleAdmin {
+		return http.StatusUnauthorized, nil, nil, errors.New("Access denied")
+	}
 
 	hashedPassword, _ := createHashedPassword(request.Password)
 	user := User{EmailAddress: request.EmailAddress, Password: hashedPassword, FirstName: request.Name, LastName: request.LastName, Role: RoleAdmin}
@@ -121,7 +184,7 @@ func getUser(u *url.URL, h http.Header, _ interface{}) (int, http.Header, *User,
 
 	log.Println("getUser Started")
 
-	userID := u.Query().Get("userID")
+	userID, err := strconv.Atoi(u.Query().Get("userID"))
 
 	user, err := repository.GetUser(userID)
 
@@ -384,4 +447,18 @@ func RequestAddr(r *http.Request) string {
 	// Get the IP of the request
 	ip, _, _ := net.SplitHostPort(r.RemoteAddr)
 	return ip
+}
+
+// GetBearerAuthFromHeader returns "Bearer" token from request.
+func GetBearerAuthFromHeader(h http.Header) string {
+	authHeader := h.Get("Authorization")
+	if authHeader == "" {
+		return ""
+	}
+
+	s := strings.SplitN(authHeader, " ", 2)
+	if len(s) != 2 || s[0] != "Bearer" {
+		return ""
+	}
+	return s[1]
 }

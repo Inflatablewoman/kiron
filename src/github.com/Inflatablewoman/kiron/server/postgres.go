@@ -2,11 +2,11 @@ package server
 
 import (
 	"database/sql"
+	"log"
 	"os"
 	"time"
-	// Required
-	"log"
 
+	// Required
 	_ "github.com/lib/pq"
 )
 
@@ -177,7 +177,7 @@ func (r postgresRepository) GetApplication(applicationID int) (*Application, err
 }
 
 func (r postgresRepository) GetApplicationOf(userID int) (*Application, error) {
-			log.Printf("Going to get application for user with id %d", userID)
+	log.Printf("Going to get application for user with id %d", userID)
 	stmt, err := r.db.Prepare("SELECT id, birthday, phone, nationality, country, city, zip, address, address_extra, first_page_of_survey_data, gender, study_program, user_id, education_level_id, status, blocked_until, created_at, edited_at FROM application WHERE user_id=$1")
 	if err != nil {
 		return nil, err
@@ -189,23 +189,23 @@ func (r postgresRepository) GetApplicationOf(userID int) (*Application, error) {
 	}
 
 	var (
-		id int
-		birthday time.Time
-		phoneNumber string
-		nationality string
-		country string
-		city string
-		zip string
-		address string
-		addressExtra string
+		id                    int
+		birthday              time.Time
+		phoneNumber           string
+		nationality           string
+		country               string
+		city                  string
+		zip                   string
+		address               string
+		addressExtra          string
 		firstPageOfSurveyData string
-		gender string
-		studyProgram int
-		educationLevel int
-		blockExpires time.Time
-		status string
-		created time.Time
-		edited time.Time
+		gender                string
+		studyProgram          int
+		educationLevel        int
+		blockExpires          time.Time
+		status                string
+		created               time.Time
+		edited                time.Time
 	)
 
 	defer rows.Close()
@@ -215,27 +215,27 @@ func (r postgresRepository) GetApplicationOf(userID int) (*Application, error) {
 			return nil, err
 		}
 		log.Println(id, birthday, phoneNumber, nationality, country, city, zip, address, addressExtra, firstPageOfSurveyData, gender, studyProgram, userID, educationLevel, status, blockExpires, created, edited)
-			
+
 	}
 
 	application := Application{
-		ID: id,
-		Birthday: birthday,
-		PhoneNumber: phoneNumber,
-		Nationality: nationality,
-		Country: country,
-		City: city,
-		Zip: zip,
-		Address: address,
-		AddressExtra: addressExtra,
+		ID:                    id,
+		Birthday:              birthday,
+		PhoneNumber:           phoneNumber,
+		Nationality:           nationality,
+		Country:               country,
+		City:                  city,
+		Zip:                   zip,
+		Address:               address,
+		AddressExtra:          addressExtra,
 		FirstPageOfSurveyData: firstPageOfSurveyData,
-		Gender: gender,
-		UserID: userID,
-		EducationLevel: educationLevel,
-		Status: status,
-		BlockExpires: blockExpires,
-		Created: created,
-		Edited: edited}
+		Gender:                gender,
+		UserID:                userID,
+		EducationLevel:        educationLevel,
+		Status:                status,
+		BlockExpires:          blockExpires,
+		Created:               created,
+		Edited:                edited}
 
 	if err = rows.Err(); err != nil {
 		return nil, err
@@ -466,9 +466,44 @@ func (r postgresRepository) GetUsers() ([]User, error) {
 	return nil, nil
 }
 
-func (r postgresRepository) GetUser(userID string) (*User, error) {
+func (r postgresRepository) GetUser(userID int) (*User, error) {
+	log.Printf("Going to get user by id: %v", userID)
+	stmt, err := r.db.Prepare("SELECT id, email, name, lastname, password, created_at, role_id FROM users WHERE id=$1")
+	if err != nil {
+		return nil, err
+	}
 
-	return nil, nil
+	rows, err := stmt.Query(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		id        int
+		name      string
+		email     string
+		lastName  string
+		password  string
+		created   time.Time
+		roleValue int
+	)
+
+	defer rows.Close()
+	for rows.Next() {
+		err := rows.Scan(&id, &email, &name, &lastName, &password, &created, &roleValue)
+		if err != nil {
+			return nil, err
+		}
+		log.Println(id, name)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	user := User{ID: id, EmailAddress: email, FirstName: name, LastName: lastName, Password: password, Created: created, Role: role(roleValue)}
+
+	return &user, nil
 }
 
 func (r postgresRepository) GetUserByEmail(emailAddress string) (*User, error) {
@@ -559,4 +594,17 @@ func (r postgresRepository) GetDocument(documentID string) ([]byte, error) {
 }
 func (r postgresRepository) DeleteDocument(documentID string) error {
 	return nil
+}
+
+func (r postgresRepository) GetToken(tokenValue string) (*Token, error) {
+	return nil, nil
+}
+func (r postgresRepository) SetToken(token *Token) error {
+	return nil
+}
+func (r postgresRepository) DelToken(tokenValue string) error {
+	return nil
+}
+func (r postgresRepository) DelExpiredTokens() {
+	return
 }
