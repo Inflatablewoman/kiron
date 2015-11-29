@@ -77,8 +77,9 @@ type User struct {
 	Role         role
 }
 
+// ToRestUser converts repo version of User to RestUser
 func (u *User) ToRestUser() *RestUser {
-	ru := RestUser{ID: u.ID, EmailAddress: u.EmailAddress}
+	ru := RestUser{ID: u.ID, EmailAddress: u.EmailAddress, FirstName: u.FirstName, LastName: u.LastName, Created: u.Created, Role: u.Role}
 	return &ru
 }
 

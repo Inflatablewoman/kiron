@@ -184,10 +184,6 @@ func createUser(u *url.URL, h http.Header, request *createUserRequest, context *
 
 	log.Printf("createUser called by: %s %s", context.RemoteAddr, context.UserAgent)
 
-	if context.User.Role != RoleAdmin {
-		return http.StatusUnauthorized, nil, nil, errors.New("Access denied")
-	}
-
 	hashedPassword, _ := createHashedPassword(request.Password)
 	user := User{EmailAddress: request.EmailAddress, Password: hashedPassword, FirstName: request.Name, LastName: request.LastName, Role: RoleAdmin}
 
@@ -205,13 +201,18 @@ func createUser(u *url.URL, h http.Header, request *createUserRequest, context *
 }
 
 // getUser will get a user
-func getUser(u *url.URL, h http.Header, _ interface{}, context *AuthContext) (int, http.Header, *User, error) {
+func getUser(u *url.URL, h http.Header, _ interface{}, context *AuthContext) (int, http.Header, *RestUser, error) {
 	var err error
 	defer CatchPanic(&err, "getUser")
 
 	log.Println("getUser Started")
 
 	userID, err := strconv.Atoi(u.Query().Get("userID"))
+
+	// logged in applicant trying to view other user's profile
+	if context.User.Role == RoleApplication && context.User.ID != userID {
+		return http.StatusUnauthorized, nil, nil, errors.New("Access denied")
+	}
 
 	user, err := repository.GetUser(userID)
 
@@ -220,7 +221,7 @@ func getUser(u *url.URL, h http.Header, _ interface{}, context *AuthContext) (in
 	}
 
 	// All good!
-	return http.StatusOK, nil, user, nil
+	return http.StatusOK, nil, user.ToRestUser(), nil
 }
 
 // getUsers will get a user
