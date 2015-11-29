@@ -178,7 +178,7 @@ func (r postgresRepository) GetApplication(applicationID int) (*Application, err
 
 func (r postgresRepository) GetApplicationOf(userID int) (*Application, error) {
 	log.Printf("Going to get application for user with id %d", userID)
-	stmt, err := r.db.Prepare("SELECT id, birthday, phone, nationality, country, city, zip, address, address_extra, first_page_of_survey_data, gender, study_program, user_id, education_level_id, status, blocked_until, created_at, edited_at FROM application WHERE user_id=$1")
+	stmt, err := r.db.Prepare("SELECT id, birthday, phone, nationality, country, city, zip, address, address_extra, first_page_of_survey_data, gender, study_program, user_id, education_level_id, status, blocked_until, created_at, edited_at FROM applications WHERE user_id=$1")
 	if err != nil {
 		return nil, err
 	}
@@ -245,7 +245,7 @@ func (r postgresRepository) GetApplicationOf(userID int) (*Application, error) {
 }
 
 func (r postgresRepository) SetApplication(application *Application) error {
-	stmt, err := r.db.Prepare("INSERT INTO applications(birthday, phone, nationality, country, city, zip, address, address_extra, first_page_of_survey_data, gender, study_program, user_id, education_level_id, status, blocked_until, created_at, edited_at) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)")
+	stmt, err := r.db.Prepare("INSERT INTO applications(birthday, phone, nationality, country, city, zip, address, address_extra, first_page_of_survey_data, gender, user_id, education_level_id, status, blocked_until, created_at, edited_at) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)")
 	if err != nil {
 		return err
 	}

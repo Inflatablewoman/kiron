@@ -78,7 +78,26 @@ func TestPostgresApplications(t *testing.T) {
 	require.NoError(t, err)
 
 	// test Application functions
+
+	t.Logf("Creating test applicant user")
+	emailAddress := fmt.Sprintf("test_admin_%s@%s.com", GetRandomString(5, ""), GetRandomString(5, ""))
+	firstName := "Iwannabe"
+	lastName := "Astudent"
 	created := time.Now().UTC()
+	password := "burningpassion"
+	t.Logf("Password: '%s'", password)
+	bcryptPassword, err := createHashedPassword(password)
+	t.Logf("hashPassword: %s", bcryptPassword)
+	require.NoError(t, err)
+	user := User{EmailAddress: emailAddress, FirstName: firstName, LastName: lastName, Password: bcryptPassword, Created: created, Role: RoleAdmin}
+
+	t.Logf("Adding user: %v", user)
+
+	err = repo.SetUser(&user)
+	require.NoError(t, err)
+
+	repoUser, err := repo.GetUserByEmail(emailAddress)
+	require.NoError(t, err)
 
 	appl := Application{
 		Birthday:              created,
@@ -87,11 +106,11 @@ func TestPostgresApplications(t *testing.T) {
 		Country:               "for old men",
 		City:                  "atlantis",
 		Zip:                   "666",
-		Address:               "none",
+		Address:               "noone",
 		AddressExtra:          "of yo business",
 		FirstPageOfSurveyData: "I use a GameBoy",
 		Gender:                "female",
-		UserID:                600,
+		UserID:                repoUser.ID,
 		EducationLevel:        2,
 		Status:                "rejected",
 		BlockExpires:          created,
@@ -101,7 +120,7 @@ func TestPostgresApplications(t *testing.T) {
 	err = repo.SetApplication(&appl)
 	require.NoError(t, err)
 
-	repoAppl, err := repo.GetApplicationOf(600)
+	repoAppl, err := repo.GetApplicationOf(1)
 	require.NoError(t, err)
 
 	t.Logf("Set application: %v", repoAppl)
@@ -110,7 +129,7 @@ func TestPostgresApplications(t *testing.T) {
 	require.Equal(t, "555", repoAppl.PhoneNumber)
 	require.Equal(t, "for old men", repoAppl.Country)
 	require.Equal(t, "marsian", repoAppl.Nationality)
-	require.Equal(t, "none", repoAppl.Address)
+	require.Equal(t, "noone", repoAppl.Address)
 	require.Equal(t, "of your business", repoAppl.AddressExtra)
 	require.Equal(t, "atlantis", repoAppl.City)
 	require.Equal(t, "female", repoAppl.Gender)
@@ -134,4 +153,9 @@ func TestPostgresApplications(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Log("Test Application deleted")
+	
+	err = repo.DeleteUser(repoUser.ID)
+	require.NoError(t,err)
+
+	t.Log("Test Application User deleted")
 }
