@@ -32,6 +32,11 @@ func getContext(r *http.Request) (http.Header, error) {
 
 	tokenValue := GetBearerAuthFromHeader(r.Header)
 
+	if tokenValue == "" {
+		log.Println("No token passed")
+		return nil, tigertonic.Unauthorized{Err: errors.New("Access denied")}
+	}
+
 	// Check token is valid
 	token, err := repository.GetToken(tokenValue)
 	if err != nil {
@@ -39,10 +44,20 @@ func getContext(r *http.Request) (http.Header, error) {
 		return nil, tigertonic.Unauthorized{Err: errors.New("Access denied")}
 	}
 
+	if token == nil || token.Value == "" {
+		log.Println("Token not found")
+		return nil, tigertonic.Unauthorized{Err: errors.New("Access denied")}
+	}
+
 	// Get user
 	user, err := repository.GetUser(token.UserID)
 	if err != nil {
 		log.Printf("Error getting user: %v", err)
+		return nil, tigertonic.Unauthorized{Err: errors.New("Access denied")}
+	}
+
+	if user.ID == 0 {
+		log.Println("User not found")
 		return nil, tigertonic.Unauthorized{Err: errors.New("Access denied")}
 	}
 
@@ -133,12 +148,8 @@ func login(u *url.URL, h http.Header, request *loginRequest, context *BasicConte
 		return http.StatusUnauthorized, nil, nil, errors.New("Invalid password or unknown user")
 	}
 
-	bcryptPass, _ := createHashedPassword(request.Password)
-	if bcryptPass != user.Password {
-		log.Printf("Password: '%s'", request.Password)
-		log.Printf("hashPassword: %s", bcryptPass)
-		log.Printf("storedPass: %s", user.Password)
-
+	match, _ := MatchPassword(request.Password, user.Password)
+	if !match {
 		log.Println("Error:  Password is incorrect")
 		return http.StatusUnauthorized, nil, nil, errors.New("Invalid password or unknown user")
 	}

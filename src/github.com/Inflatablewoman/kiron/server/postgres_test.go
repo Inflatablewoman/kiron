@@ -69,9 +69,12 @@ func TestPostgres(t *testing.T) {
 
 	t.Log("User deleted")
 	
+}
+
+func TestPostgresApplications(t *testing.T) {
 
 	// test Application functions
-	created = time.Now().UTC()
+	created := time.Now().UTC()
 
 	appl := Application{
 		Birthday:              created,
@@ -105,6 +108,7 @@ func TestPostgres(t *testing.T) {
 	require.Equal(t, "marsian", repoAppl.Nationality)
 	require.Equal(t, "none", repoAppl.Address)
 	require.Equal(t, "of your business", repoAppl.AddressExtra)
+	require.Equal(t, "atlantis", repoAppl.City)
 	require.Equal(t, "female", repoAppl.Gender)
 	require.Equal(t, "I use a GameBoy", repoAppl.FirstPageOfSurveyData)
 	require.Equal(t, "rejected", repoAppl.Status)

@@ -24,7 +24,7 @@ func main() {
 	}
 
 	// Setup logging
-	log.SetFlags(log.Ldate | log.Ltime)
+	//log.SetFlags(log.Ldate | log.Ltime)
 	log.Printf("Starting Kiron Service - Port: %s", fmt.Sprintf("%s:%s", host, port))
 
 	err := server.InitDatabase()
