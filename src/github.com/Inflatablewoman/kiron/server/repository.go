@@ -23,6 +23,7 @@ type DataRepository interface {
 	DeleteApplication(applicationID int) error
 
 	GetComments(applicationID int) ([]*Comment, error)
+	SetComment(comment *Comment) error
 	GetComment(commentID int) (*Comment, error)
 	DeleteComment(commentID int) error
 
